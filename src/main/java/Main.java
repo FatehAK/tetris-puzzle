@@ -18,7 +18,7 @@ public class Main extends Application {
             
             Scene scene = new Scene(root, 300, 250);
             
-            primaryStage.setTitle("Tetris Puzzle");
+            primaryStage.setTitle("Tetris Puzzle is great");
             primaryStage.setScene(scene);
             primaryStage.show();
         } catch (Exception e) {
