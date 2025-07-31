@@ -32,7 +32,12 @@ public class DevLauncher extends Application {
             try {
                 Scene scene = switch (selected) {
                     case "splash" -> SplashScreen.getScene(() -> {});
-                    case "menu" -> MenuScreen.getScene();
+                    case "menu" -> MenuScreen.getScene(
+                            () -> System.out.println("Play clicked"),
+                            () -> System.out.println("Config clicked"),
+                            () -> System.out.println("High Scores clicked"),
+                            () -> System.exit(0)
+                    );
                     case "config" -> ConfigScreen.getScene();
                     case "highscore" -> HighScoreScreen.getScene();
                     case "gameplay" -> GameplayScreen.getScene();
