@@ -1,0 +1,13 @@
+.menu-root {
+    -fx-background-color: #1e272e;
+    -fx-padding: 30 0 30 0;
+}
+
+.menu-button {
+    -fx-background-color: #3c6382;
+    -fx-background-radius: 10;
+    -fx-text-fill: white;
+    -fx-font-family: Arial;
+    -fx-font-size: 18px;
+    -fx-pref-width: 200px;
+}

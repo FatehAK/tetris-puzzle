@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ui.menuscreen.MenuScreen"
+      spacing="20" alignment="CENTER"
+      stylesheets="@menu.css"
+      styleClass="menu-root"
+      fx:id="root"
+>
+
+    <Button fx:id="playBtn" text="Play" styleClass="menu-button"/>
+    <Button fx:id="configBtn" text="Configuration" styleClass="menu-button"/>
+    <Button fx:id="scoresBtn" text="High Scores" styleClass="menu-button"/>
+    <Button fx:id="exitBtn" text="Exit" styleClass="menu-button"/>
+
+</VBox>
