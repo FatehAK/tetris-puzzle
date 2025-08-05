@@ -1,0 +1,33 @@
+#root {
+    -fx-background-color: #1e272e;
+}
+
+.game-field {
+    -fx-background-color: #1e272e;
+    -fx-border-color: #333333;
+    -fx-border-width: 0 2px 0 2px;
+    -fx-padding: 5px;
+    -fx-alignment: center;
+}
+
+.game-cell {
+    -fx-background-color: #111111;
+    -fx-border-color: #333333;
+    -fx-border-width: 0.5px;
+    -fx-pref-width: 25px;
+    -fx-pref-height: 25px;
+    -fx-min-width: 25px;
+    -fx-min-height: 25px;
+    -fx-max-width: 25px;
+    -fx-max-height: 25px;
+}
+
+
+.game-button-small {
+    -fx-background-color: #3c6382;
+    -fx-background-radius: 10;
+    -fx-text-fill: white;
+    -fx-font-family: Arial;
+    -fx-font-size: 14px;
+    -fx-pref-width: 120px;
+}
