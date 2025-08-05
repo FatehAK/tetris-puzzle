@@ -10,7 +10,6 @@
       xmlns:fx="http://javafx.com/fxml"
       alignment="CENTER"
       spacing="15"
-      opacity="0"
       stylesheets="@splash.css"
       styleClass="splash-root">
 
