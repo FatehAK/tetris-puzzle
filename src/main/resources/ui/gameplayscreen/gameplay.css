@@ -22,7 +22,6 @@
     -fx-max-height: 25px;
 }
 
-
 .game-button-small {
     -fx-background-color: #3c6382;
     -fx-background-radius: 10;
@@ -31,3 +30,35 @@
     -fx-font-size: 14px;
     -fx-pref-width: 120px;
 }
+
+/* Tetris Shape Colors */
+.shape-cyan {
+    -fx-background-color: #00bcd4;
+    -fx-border-color: #00acc1;
+    -fx-border-width: 1px;
+}
+
+.shape-yellow {
+    -fx-background-color: #ffeb3b;
+    -fx-border-color: #fbc02d;
+    -fx-border-width: 1px;
+}
+
+.shape-purple {
+    -fx-background-color: #9c27b0;
+    -fx-border-color: #7b1fa2;
+    -fx-border-width: 1px;
+}
+
+.shape-orange {
+    -fx-background-color: #ff9800;
+    -fx-border-color: #f57c00;
+    -fx-border-width: 1px;
+}
+
+.shape-green {
+    -fx-background-color: #4caf50;
+    -fx-border-color: #388e3c;
+    -fx-border-width: 1px;
+}
+
