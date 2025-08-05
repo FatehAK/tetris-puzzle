@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="root"
+      fx:controller="ui.splashscreen.SplashScreen"
+      xmlns:fx="http://javafx.com/fxml"
+      alignment="CENTER"
+      spacing="15"
+      stylesheets="@splash.css"
+      styleClass="splash-root">
+
+    <ImageView fitWidth="250" preserveRatio="true">
+        <image>
+            <Image url="@/images/Tetris_logo.png" />
+        </image>
+    </ImageView>
+
+    <Label text="Course Code: 7010ICT" styleClass="splash-label"/>
+    <Label text="Group 10: Fateh, Ambrose, Kevin, Patrick" styleClass="splash-label"/>
+    <Label text="Welcome to the Tetris Puzzle Challenge!" styleClass="splash-footer"/>
+</VBox>
