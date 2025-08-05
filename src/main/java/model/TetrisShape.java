@@ -1,5 +1,6 @@
 package model;
 
+// Represents a Tetris piece shape with its pattern and color
 public class TetrisShape {
     
     public enum ShapeType {
@@ -9,13 +10,18 @@ public class TetrisShape {
     private final ShapeType type;
     private final boolean[][] pattern;
     private final String color;
+    private int x;
+    private int y;
     
-    public TetrisShape(ShapeType type) {
+    public TetrisShape(ShapeType type, int x, int y) {
         this.type = type;
         this.pattern = createPattern(type);
         this.color = getColorForType(type);
+        this.x = x;
+        this.y = y;
     }
     
+    // creates 2D boolean pattern for each shape type
     private boolean[][] createPattern(ShapeType type) {
         return switch (type) {
             case I -> new boolean[][] {
@@ -41,6 +47,7 @@ public class TetrisShape {
         };
     }
     
+    // returns standard color name for each shape type
     private String getColorForType(ShapeType type) {
         return switch (type) {
             case I -> "cyan";
@@ -68,5 +75,32 @@ public class TetrisShape {
             return false;
         }
         return pattern[row][col];
+    }
+    
+    public int getX() {
+        return x;
+    }
+    
+    public int getY() {
+        return y;
+    }
+    
+    public void setX(int x) {
+        this.x = x;
+    }
+    
+    public void setY(int y) {
+        this.y = y;
+    }
+    
+    // static method to get width without creating object
+    public static int getWidthForType(ShapeType type) {
+        return switch (type) {
+            case I -> 4;
+            case O -> 2;
+            case T -> 3;
+            case L -> 2;
+            case Z -> 3;
+        };
     }
 }
