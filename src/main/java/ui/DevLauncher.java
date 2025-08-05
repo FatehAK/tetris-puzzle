@@ -31,7 +31,11 @@ public class DevLauncher extends Application {
             String selected = screenSelector.getValue();
             try {
                 Scene scene = switch (selected) {
-                    case "splash" -> SplashScreen.getScene(() -> {});
+                    case "splash" -> SplashScreen.getScene(() -> {
+                        Scene next = MenuScreen.getScene();
+                        stage.setScene(next);
+                        stage.setTitle("DevLauncher - menu");
+                    });
                     case "menu" -> MenuScreen.getScene();
                     case "config" -> ConfigScreen.getScene();
                     case "highscore" -> HighScoreScreen.getScene();
