@@ -4,7 +4,7 @@ package model;
 public class TetrisShape {
     
     public enum ShapeType {
-        I, O, T, L, Z
+        I, O, T, L, J, Z, S
     }
     
     private final ShapeType type;
@@ -21,7 +21,9 @@ public class TetrisShape {
             case O -> "yellow";
             case T -> "purple";
             case L -> "orange";
+            case J -> "blue";
             case Z -> "green";
+            case S -> "red";
         };
         this.x = x;
         this.y = y;
@@ -103,7 +105,10 @@ public class TetrisShape {
     private static boolean[][] createPattern(ShapeType type) {
         return switch (type) {
             case I -> new boolean[][] {
-                {true, true, true, true}
+                {true},
+                {true},
+                {true},
+                {true}
             };
             case O -> new boolean[][] {
                 {true, true},
@@ -118,9 +123,18 @@ public class TetrisShape {
                 {true, false},
                 {true, true}
             };
+            case J -> new boolean[][] {
+                {false, true},
+                {false, true},
+                {true, true}
+            };
             case Z -> new boolean[][] {
                 {true, true, false},
                 {false, true, true}
+            };
+            case S -> new boolean[][] {
+                {false, true, true},
+                {true, true, false}
             };
         };
     }
