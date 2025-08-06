@@ -13,7 +13,7 @@
 .game-cell {
     -fx-background-color: #111111;
     -fx-border-color: #333333;
-    -fx-border-width: 0.5px;
+    -fx-border-width: 0px;
     -fx-pref-width: 25px;
     -fx-pref-height: 25px;
     -fx-min-width: 25px;
