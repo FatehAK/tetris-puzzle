@@ -1,17 +1,18 @@
 package model;
 
+import util.Point;
+
 // Represents a Tetris piece shape with its pattern and color
 public class TetrisShape {
     
     public enum ShapeType {
-        I, O, T, L, Z
+        I, O, T, L, J, Z, S
     }
     
     private final ShapeType type;
     private boolean[][] pattern;
     private final String color;
-    private int x;
-    private int y;
+    private Point position;
     
     public TetrisShape(ShapeType type, int x, int y) {
         this.type = type;
@@ -21,10 +22,11 @@ public class TetrisShape {
             case O -> "yellow";
             case T -> "purple";
             case L -> "orange";
+            case J -> "blue";
             case Z -> "green";
+            case S -> "red";
         };
-        this.x = x;
-        this.y = y;
+        this.position = new Point(x, y);
     }
     
     public String getColor() {
@@ -51,19 +53,27 @@ public class TetrisShape {
     }
     
     public int getX() {
-        return x;
+        return position.x();
     }
     
     public int getY() {
-        return y;
+        return position.y();
     }
     
     public void setX(int x) {
-        this.x = x;
+        this.position = new Point(x, position.y());
     }
     
     public void setY(int y) {
-        this.y = y;
+        this.position = new Point(position.x(), y);
+    }
+    
+    public Point getPosition() {
+        return position;
+    }
+    
+    public void setPosition(Point position) {
+        this.position = position;
     }
     
     // static method to get width without creating object
@@ -79,6 +89,14 @@ public class TetrisShape {
         }
         
         pattern = rotatePattern(pattern);
+    }
+    
+    // creates a rotated copy without modifying this piece (for testing)
+    public boolean[][] getRotatedPattern() {
+        if (type == ShapeType.O) {
+            return pattern;
+        }
+        return rotatePattern(pattern);
     }
     
     // rotates a 2D boolean array 90 degrees clockwise
@@ -99,11 +117,13 @@ public class TetrisShape {
         return rotated;
     }
     
-    // make createPattern static for reuse
     private static boolean[][] createPattern(ShapeType type) {
         return switch (type) {
             case I -> new boolean[][] {
-                {true, true, true, true}
+                {true},
+                {true},
+                {true},
+                {true}
             };
             case O -> new boolean[][] {
                 {true, true},
@@ -118,9 +138,18 @@ public class TetrisShape {
                 {true, false},
                 {true, true}
             };
+            case J -> new boolean[][] {
+                {false, true},
+                {false, true},
+                {true, true}
+            };
             case Z -> new boolean[][] {
                 {true, true, false},
                 {false, true, true}
+            };
+            case S -> new boolean[][] {
+                {false, true, true},
+                {true, true, false}
             };
         };
     }

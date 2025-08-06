@@ -13,9 +13,9 @@ public class GameBoard {
     }
     
     public void clearBoard() {
-        for (int row = 0; row < BOARD_HEIGHT; row++) {
-            for (int col = 0; col < BOARD_WIDTH; col++) {
-                board[row][col] = null;
+        for (String[] row : board) {
+            for (int col = 0; col < row.length; col++) {
+                row[col] = null;
             }
         }
     }

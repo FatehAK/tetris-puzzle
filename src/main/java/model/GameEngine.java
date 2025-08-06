@@ -3,7 +3,7 @@ package model;
 import java.util.Random;
 
 // Controls the game logic and piece movement
-public class GameEngine {
+public class GameEngine implements InputController {
     private GameBoard board;
     private TetrisShape currentPiece;
     private Random random;
@@ -47,15 +47,15 @@ public class GameEngine {
         TetrisShape.ShapeType[] types = TetrisShape.ShapeType.values();
         TetrisShape.ShapeType randomType = types[random.nextInt(types.length)]; // pick random shape
         
-        // create piece centered horizontally, start slightly above the game area for falling animation
+        // create piece centered horizontally, start above the game area for proper spawning
         int startX = (GameBoard.BOARD_WIDTH - TetrisShape.getWidthForType(randomType)) / 2; // center horizontally
-        int startY = 0; // start at the top of the visible game area
+        int startY = -1; // start above the visible game area to allow proper entry
         currentPiece = new TetrisShape(randomType, startX, startY);
         smoothY = startY; // initialize smooth position
         
-        // check game over when piece reaches the visible area
-        if (!board.isValidPosition(currentPiece, currentPiece.getX(), 0)) {
-            stopGame(); // game over - can't place new piece at top of visible area
+        // check game over - piece can't be placed at spawn position
+        if (!board.isValidPosition(currentPiece, startX, startY)) {
+            stopGame(); // game over - can't spawn new piece at all
         }
     }
     
@@ -99,6 +99,27 @@ public class GameEngine {
         return movePiece(1, 0);
     }
     
+    // InputController interface implementations
+    @Override
+    public boolean moveLeft() {
+        return movePieceLeft();
+    }
+    
+    @Override
+    public boolean moveRight() {
+        return movePieceRight();
+    }
+    
+    @Override
+    public boolean rotate() {
+        return rotatePiece();
+    }
+    
+    @Override
+    public void setFastDrop(boolean enabled) {
+        setFastDropEnabled(enabled);
+    }
+    
     public boolean rotatePiece() {
         if (currentPiece == null || !gameRunning) {
             return false;
@@ -125,22 +146,35 @@ public class GameEngine {
     }
     
     private boolean tryRotation(int deltaX, int deltaY) {
-        // create a copy to test rotation
-        TetrisShape testPiece = new TetrisShape(currentPiece.getType(), 
-                                              currentPiece.getX() + deltaX, 
-                                              currentPiece.getY() + deltaY);
-        testPiece.rotate();
+        int newX = currentPiece.getX() + deltaX;
+        int newY = currentPiece.getY() + deltaY;
         
-        // check if rotated piece fits
-        if (board.isValidPosition(testPiece, testPiece.getX(), testPiece.getY())) {
-            // apply rotation to current piece
-            currentPiece.rotate();
-            currentPiece.setX(currentPiece.getX() + deltaX);
-            currentPiece.setY(currentPiece.getY() + deltaY);
-            return true;
+        // test rotation without creating new objects
+        boolean[][] rotatedPattern = currentPiece.getRotatedPattern();
+        
+        // check if rotated pattern fits at new position
+        for (int row = 0; row < rotatedPattern.length; row++) {
+            for (int col = 0; col < rotatedPattern[0].length; col++) {
+                if (rotatedPattern[row][col]) {
+                    int boardX = newX + col;
+                    int boardY = newY + row;
+                    
+                    if (boardX < 0 || boardX >= GameBoard.BOARD_WIDTH || boardY >= GameBoard.BOARD_HEIGHT) {
+                        return false;
+                    }
+                    
+                    if (boardY >= 0 && board.getCellColor(boardY, boardX) != null) {
+                        return false;
+                    }
+                }
+            }
         }
         
-        return false;
+        // rotation is valid - apply it
+        currentPiece.rotate();
+        currentPiece.setX(newX);
+        currentPiece.setY(newY);
+        return true;
     }
     
     public boolean updateGame(long currentTime) {

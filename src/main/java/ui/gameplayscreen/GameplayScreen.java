@@ -11,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
 import model.GameBoard;
 import model.GameEngine;
+import model.InputController;
 import model.TetrisShape;
 import util.ShapeColors;
 
@@ -25,6 +26,7 @@ public class GameplayScreen {
     
     private GraphicsContext gc;
     private GameEngine gameEngine;
+    private InputController inputController;
     private AnimationTimer gameLoop;
     
     private static final int CELL_SIZE = 25;
@@ -56,6 +58,7 @@ public class GameplayScreen {
     
     private void initializeGame() {
         gameEngine = new GameEngine();
+        inputController = gameEngine; // use interface for input controls
         gameEngine.startGame();
         drawGame(); // initial draw after game engine is ready
     }
@@ -143,19 +146,19 @@ public class GameplayScreen {
 
     public void setupKeyboardEvents(Scene scene) {
         scene.setOnKeyPressed(event -> {
-            if (gameEngine != null && gameEngine.isGameRunning()) {
+            if (inputController != null && gameEngine != null && gameEngine.isGameRunning()) {
                 switch (event.getCode()) {
-                    case LEFT -> gameEngine.movePieceLeft();
-                    case RIGHT -> gameEngine.movePieceRight();
-                    case DOWN -> gameEngine.setFastDropEnabled(true);
-                    case UP -> gameEngine.rotatePiece();
+                    case LEFT -> inputController.moveLeft();
+                    case RIGHT -> inputController.moveRight();
+                    case DOWN -> inputController.setFastDrop(true);
+                    case UP -> inputController.rotate();
                 }
             }
         });
         
         scene.setOnKeyReleased(event -> {
-            if (gameEngine != null && event.getCode() == javafx.scene.input.KeyCode.DOWN) {
-                gameEngine.setFastDropEnabled(false);
+            if (inputController != null && event.getCode() == javafx.scene.input.KeyCode.DOWN) {
+                inputController.setFastDrop(false);
             }
         });
         
