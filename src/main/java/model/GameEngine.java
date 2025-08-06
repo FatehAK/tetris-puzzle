@@ -3,7 +3,7 @@ package model;
 import java.util.Random;
 
 // Controls the game logic and piece movement
-public class GameEngine {
+public class GameEngine implements InputController {
     private GameBoard board;
     private TetrisShape currentPiece;
     private Random random;
@@ -97,6 +97,27 @@ public class GameEngine {
     
     public boolean movePieceRight() {
         return movePiece(1, 0);
+    }
+    
+    // InputController interface implementations
+    @Override
+    public boolean moveLeft() {
+        return movePieceLeft();
+    }
+    
+    @Override
+    public boolean moveRight() {
+        return movePieceRight();
+    }
+    
+    @Override
+    public boolean rotate() {
+        return rotatePiece();
+    }
+    
+    @Override
+    public void setFastDrop(boolean enabled) {
+        setFastDropEnabled(enabled);
     }
     
     public boolean rotatePiece() {

@@ -22,7 +22,10 @@ public class DevLauncher extends Application {
     @Override
     public void start(Stage stage) {
         ComboBox<String> screenSelector = new ComboBox<>();
-        screenSelector.getItems().addAll("splash", "menu", "config", "highscore", "gameplay");
+        String[] screens = {"splash", "menu", "config", "highscore", "gameplay"};
+        for (String screen : screens) {
+            screenSelector.getItems().add(screen);
+        }
         screenSelector.setValue("splash");
 
         Button launchButton = new Button("Launch Screen");

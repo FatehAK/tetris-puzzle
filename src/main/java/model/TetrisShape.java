@@ -1,5 +1,7 @@
 package model;
 
+import util.Point;
+
 // Represents a Tetris piece shape with its pattern and color
 public class TetrisShape {
     
@@ -10,8 +12,7 @@ public class TetrisShape {
     private final ShapeType type;
     private boolean[][] pattern;
     private final String color;
-    private int x;
-    private int y;
+    private Point position;
     
     public TetrisShape(ShapeType type, int x, int y) {
         this.type = type;
@@ -25,8 +26,7 @@ public class TetrisShape {
             case Z -> "green";
             case S -> "red";
         };
-        this.x = x;
-        this.y = y;
+        this.position = new Point(x, y);
     }
     
     public String getColor() {
@@ -53,19 +53,27 @@ public class TetrisShape {
     }
     
     public int getX() {
-        return x;
+        return position.x();
     }
     
     public int getY() {
-        return y;
+        return position.y();
     }
     
     public void setX(int x) {
-        this.x = x;
+        this.position = new Point(x, position.y());
     }
     
     public void setY(int y) {
-        this.y = y;
+        this.position = new Point(position.x(), y);
+    }
+    
+    public Point getPosition() {
+        return position;
+    }
+    
+    public void setPosition(Point position) {
+        this.position = position;
     }
     
     // static method to get width without creating object
