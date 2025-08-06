@@ -83,6 +83,14 @@ public class TetrisShape {
         pattern = rotatePattern(pattern);
     }
     
+    // creates a rotated copy without modifying this piece (for testing)
+    public boolean[][] getRotatedPattern() {
+        if (type == ShapeType.O) {
+            return pattern;
+        }
+        return rotatePattern(pattern);
+    }
+    
     // rotates a 2D boolean array 90 degrees clockwise
     private boolean[][] rotatePattern(boolean[][] original) {
         int originalRows = original.length;
@@ -101,7 +109,6 @@ public class TetrisShape {
         return rotated;
     }
     
-    // make createPattern static for reuse
     private static boolean[][] createPattern(ShapeType type) {
         return switch (type) {
             case I -> new boolean[][] {
