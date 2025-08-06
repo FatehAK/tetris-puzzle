@@ -1,0 +1,20 @@
+#root {
+    -fx-background-color: #1e272e;
+}
+
+.game-field {
+    -fx-background-color: #1e272e;
+    -fx-border-color: #333333;
+    -fx-border-width: 0 2px 0 2px;
+    -fx-padding: 0px;
+    -fx-alignment: center;
+}
+
+.game-button-small {
+    -fx-background-color: #3c6382;
+    -fx-background-radius: 10;
+    -fx-text-fill: white;
+    -fx-font-family: Arial;
+    -fx-font-size: 14px;
+    -fx-pref-width: 120px;
+}
