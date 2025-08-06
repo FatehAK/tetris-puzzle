@@ -16,46 +16,15 @@ public class TetrisShape {
     public TetrisShape(ShapeType type, int x, int y) {
         this.type = type;
         this.pattern = createPattern(type);
-        this.color = getColorForType(type);
-        this.x = x;
-        this.y = y;
-    }
-    
-    // creates 2D boolean pattern for each shape type
-    private boolean[][] createPattern(ShapeType type) {
-        return switch (type) {
-            case I -> new boolean[][] {
-                {true, true, true, true}
-            };
-            case O -> new boolean[][] {
-                {true, true},
-                {true, true}
-            };
-            case T -> new boolean[][] {
-                {false, true, false},
-                {true, true, true}
-            };
-            case L -> new boolean[][] {
-                {true, false},
-                {true, false},
-                {true, true}
-            };
-            case Z -> new boolean[][] {
-                {true, true, false},
-                {false, true, true}
-            };
-        };
-    }
-    
-    // returns standard color name for each shape type
-    private String getColorForType(ShapeType type) {
-        return switch (type) {
+        this.color = switch (type) {
             case I -> "cyan";
             case O -> "yellow";
             case T -> "purple";
             case L -> "orange";
             case Z -> "green";
         };
+        this.x = x;
+        this.y = y;
     }
     
     public String getColor() {
@@ -95,12 +64,32 @@ public class TetrisShape {
     
     // static method to get width without creating object
     public static int getWidthForType(ShapeType type) {
+        return createPattern(type)[0].length;
+    }
+    
+    // make createPattern static for reuse
+    private static boolean[][] createPattern(ShapeType type) {
         return switch (type) {
-            case I -> 4;
-            case O -> 2;
-            case T -> 3;
-            case L -> 2;
-            case Z -> 3;
+            case I -> new boolean[][] {
+                {true, true, true, true}
+            };
+            case O -> new boolean[][] {
+                {true, true},
+                {true, true}
+            };
+            case T -> new boolean[][] {
+                {false, true, false},
+                {true, true, true}
+            };
+            case L -> new boolean[][] {
+                {true, false},
+                {true, false},
+                {true, true}
+            };
+            case Z -> new boolean[][] {
+                {true, true, false},
+                {false, true, true}
+            };
         };
     }
 }

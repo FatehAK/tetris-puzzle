@@ -6,20 +6,8 @@
     -fx-background-color: #1e272e;
     -fx-border-color: #333333;
     -fx-border-width: 0 2px 0 2px;
-    -fx-padding: 5px;
+    -fx-padding: 0px;
     -fx-alignment: center;
-}
-
-.game-cell {
-    -fx-background-color: #111111;
-    -fx-border-color: #333333;
-    -fx-border-width: 0px;
-    -fx-pref-width: 25px;
-    -fx-pref-height: 25px;
-    -fx-min-width: 25px;
-    -fx-min-height: 25px;
-    -fx-max-width: 25px;
-    -fx-max-height: 25px;
 }
 
 .game-button-small {
@@ -30,35 +18,3 @@
     -fx-font-size: 14px;
     -fx-pref-width: 120px;
 }
-
-/* Tetris Shape Colors */
-.shape-cyan {
-    -fx-background-color: #00bcd4;
-    -fx-border-color: #00acc1;
-    -fx-border-width: 1px;
-}
-
-.shape-yellow {
-    -fx-background-color: #ffeb3b;
-    -fx-border-color: #fbc02d;
-    -fx-border-width: 1px;
-}
-
-.shape-purple {
-    -fx-background-color: #9c27b0;
-    -fx-border-color: #7b1fa2;
-    -fx-border-width: 1px;
-}
-
-.shape-orange {
-    -fx-background-color: #ff9800;
-    -fx-border-color: #f57c00;
-    -fx-border-width: 1px;
-}
-
-.shape-green {
-    -fx-background-color: #4caf50;
-    -fx-border-color: #388e3c;
-    -fx-border-width: 1px;
-}
-

@@ -9,7 +9,8 @@ public class GameEngine {
     private Random random;
     private boolean gameRunning;
     private long lastDropTime = 0;
-    private static final long DROP_INTERVAL = 500_000_000L; // 0.5 seconds in nanoseconds
+    private static final long DROP_INTERVAL = 800_000_000L; // 0.8 seconds in nanoseconds
+    private double smoothY = 0.0; // smooth Y position for animation
     
     public GameEngine() {
         board = new GameBoard();
@@ -44,12 +45,13 @@ public class GameEngine {
         TetrisShape.ShapeType[] types = TetrisShape.ShapeType.values();
         TetrisShape.ShapeType randomType = types[random.nextInt(types.length)]; // pick random shape
         
-        // Create piece centered horizontally, start slightly above the game area for falling animation
+        // create piece centered horizontally, start slightly above the game area for falling animation
         int startX = (GameBoard.BOARD_WIDTH - TetrisShape.getWidthForType(randomType)) / 2; // center horizontally
-        int startY = -1; // start just above the game area to create falling effect
+        int startY = 0; // start at the top of the visible game area
         currentPiece = new TetrisShape(randomType, startX, startY);
+        smoothY = startY; // initialize smooth position
         
-        // Check game over when piece reaches the visible area
+        // check game over when piece reaches the visible area
         if (!board.isValidPosition(currentPiece, currentPiece.getX(), 0)) {
             gameRunning = false; // game over - can't place new piece at top of visible area
         }
@@ -81,6 +83,7 @@ public class GameEngine {
         if (board.isValidPosition(currentPiece, newX, newY)) {
             currentPiece.setX(newX);
             currentPiece.setY(newY);
+            smoothY = newY; // update smooth position when piece moves
             return true;
         }
         return false;
@@ -95,17 +98,30 @@ public class GameEngine {
     }
     
     public boolean updateGame(long currentTime) {
-        if (!gameRunning) {
+        if (!gameRunning || currentPiece == null) {
             return false;
+        }
+        
+        // smooth falling animation
+        double deltaTime = (currentTime - lastDropTime) / (double) DROP_INTERVAL;
+        
+        // update smooth position based on movement capability
+        if (board.isValidPosition(currentPiece, currentPiece.getX(), currentPiece.getY() + 1)) {
+            smoothY = currentPiece.getY() + Math.min(deltaTime, 1.0);
+        } else {
+            smoothY = currentPiece.getY();
         }
         
         // check if enough time has passed for next drop
         if (currentTime - lastDropTime >= DROP_INTERVAL) {
             movePieceDown();
             lastDropTime = currentTime;
-            return true; // display needs update
         }
         
-        return false; // no update needed
+        return true; // always update display for smooth animation
+    }
+    
+    public double getSmoothY() {
+        return smoothY;
     }
 }

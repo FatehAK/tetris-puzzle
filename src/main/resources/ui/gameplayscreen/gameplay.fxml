@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.*?>
 <?import javafx.geometry.*?>
 
 <VBox xmlns="http://javafx.com/javafx"
@@ -13,7 +14,7 @@
       spacing="20"
       stylesheets="@gameplay.css">
     
-    <GridPane fx:id="gameField" styleClass="game-field" gridLinesVisible="true"></GridPane>
+    <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
     
     <Button fx:id="backButton" text="Back to Menu" styleClass="game-button-small"/>
     
