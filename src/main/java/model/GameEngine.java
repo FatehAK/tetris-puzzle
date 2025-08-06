@@ -44,13 +44,14 @@ public class GameEngine {
         TetrisShape.ShapeType[] types = TetrisShape.ShapeType.values();
         TetrisShape.ShapeType randomType = types[random.nextInt(types.length)]; // pick random shape
         
-        // Create piece centered at top
+        // Create piece centered horizontally, start slightly above the game area for falling animation
         int startX = (GameBoard.BOARD_WIDTH - TetrisShape.getWidthForType(randomType)) / 2; // center horizontally
-        int startY = 0;
+        int startY = -1; // start just above the game area to create falling effect
         currentPiece = new TetrisShape(randomType, startX, startY);
         
-        if (!board.isValidPosition(currentPiece, currentPiece.getX(), currentPiece.getY())) {
-            gameRunning = false; // game over - can't place new piece
+        // Check game over when piece reaches the visible area
+        if (!board.isValidPosition(currentPiece, currentPiece.getX(), 0)) {
+            gameRunning = false; // game over - can't place new piece at top of visible area
         }
     }
     

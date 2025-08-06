@@ -28,12 +28,13 @@ public class GameBoard {
                     int boardX = newX + col; // translate to board coordinates
                     int boardY = newY + row;
                     
-                    if (boardX < 0 || boardX >= BOARD_WIDTH || 
-                        boardY < 0 || boardY >= BOARD_HEIGHT) {
+                    // Allow pieces above the game area (negative Y), but check bounds for visible area
+                    if (boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT) {
                         return false;
                     }
                     
-                    if (board[boardY][boardX] != null) {
+                    // Only check collision if the cell is within the visible game area
+                    if (boardY >= 0 && board[boardY][boardX] != null) {
                         return false;
                     }
                 }
