@@ -148,6 +148,7 @@ public class GameplayScreen {
                     case LEFT -> gameEngine.movePieceLeft();
                     case RIGHT -> gameEngine.movePieceRight();
                     case DOWN -> gameEngine.setFastDropEnabled(true);
+                    case UP -> gameEngine.rotatePiece();
                 }
             }
         });

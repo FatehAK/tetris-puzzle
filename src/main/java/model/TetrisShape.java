@@ -8,7 +8,7 @@ public class TetrisShape {
     }
     
     private final ShapeType type;
-    private final boolean[][] pattern;
+    private boolean[][] pattern;
     private final String color;
     private int x;
     private int y;
@@ -29,6 +29,10 @@ public class TetrisShape {
     
     public String getColor() {
         return color;
+    }
+    
+    public ShapeType getType() {
+        return type;
     }
     
     public int getWidth() {
@@ -65,6 +69,34 @@ public class TetrisShape {
     // static method to get width without creating object
     public static int getWidthForType(ShapeType type) {
         return createPattern(type)[0].length;
+    }
+    
+    // rotates the piece 90 degrees clockwise
+    public void rotate() {
+        // O-shape doesn't need rotation
+        if (type == ShapeType.O) {
+            return;
+        }
+        
+        pattern = rotatePattern(pattern);
+    }
+    
+    // rotates a 2D boolean array 90 degrees clockwise
+    private boolean[][] rotatePattern(boolean[][] original) {
+        int originalRows = original.length;
+        int originalCols = original[0].length;
+        
+        // rotated dimensions are swapped
+        boolean[][] rotated = new boolean[originalCols][originalRows];
+        
+        for (int row = 0; row < originalRows; row++) {
+            for (int col = 0; col < originalCols; col++) {
+                // 90 degree clockwise rotation formula: (row, col) -> (col, originalRows - 1 - row)
+                rotated[col][originalRows - 1 - row] = original[row][col];
+            }
+        }
+        
+        return rotated;
     }
     
     // make createPattern static for reuse

@@ -99,6 +99,50 @@ public class GameEngine {
         return movePiece(1, 0);
     }
     
+    public boolean rotatePiece() {
+        if (currentPiece == null || !gameRunning) {
+            return false;
+        }
+        
+        // try rotation at current position
+        if (tryRotation(0, 0)) {
+            return true;
+        }
+        
+        // wall kick attempts - try moving left or right if rotation fails
+        if (tryRotation(-1, 0) || tryRotation(1, 0)) {
+            return true;
+        }
+        
+        // additional wall kick for I-piece (try moving 2 positions)
+        if (currentPiece.getType() == TetrisShape.ShapeType.I) {
+            if (tryRotation(-2, 0) || tryRotation(2, 0)) {
+                return true;
+            }
+        }
+        
+        return false; // rotation failed
+    }
+    
+    private boolean tryRotation(int deltaX, int deltaY) {
+        // create a copy to test rotation
+        TetrisShape testPiece = new TetrisShape(currentPiece.getType(), 
+                                              currentPiece.getX() + deltaX, 
+                                              currentPiece.getY() + deltaY);
+        testPiece.rotate();
+        
+        // check if rotated piece fits
+        if (board.isValidPosition(testPiece, testPiece.getX(), testPiece.getY())) {
+            // apply rotation to current piece
+            currentPiece.rotate();
+            currentPiece.setX(currentPiece.getX() + deltaX);
+            currentPiece.setY(currentPiece.getY() + deltaY);
+            return true;
+        }
+        
+        return false;
+    }
+    
     public boolean updateGame(long currentTime) {
         if (!gameRunning || currentPiece == null) {
             return false;
