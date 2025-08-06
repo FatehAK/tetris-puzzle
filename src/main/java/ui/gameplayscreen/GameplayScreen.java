@@ -13,7 +13,6 @@ import model.GameBoard;
 import model.GameEngine;
 import model.TetrisShape;
 import util.ShapeColors;
-import util.KeyboardHandler;
 
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen {
@@ -27,7 +26,6 @@ public class GameplayScreen {
     private GraphicsContext gc;
     private GameEngine gameEngine;
     private AnimationTimer gameLoop;
-    private KeyboardHandler keyboardHandler;
     
     private static final int CELL_SIZE = 25;
     private static final int PADDING = 0;
@@ -37,7 +35,6 @@ public class GameplayScreen {
     public void initialize() {
         initializeCanvas();
         backButton.setOnAction(event -> onBackButtonClicked());
-        keyboardHandler = new KeyboardHandler();
         initializeGame();
         startGameLoop();
     }
@@ -67,12 +64,6 @@ public class GameplayScreen {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                // check for fast drop input
-                if (gameEngine.isGameRunning()) {
-                    boolean isDownPressed = keyboardHandler.isDownArrowPressed();
-                    gameEngine.setFastDropEnabled(isDownPressed);
-                }
-                
                 if (gameEngine.updateGame(now)) {
                     drawGame();
                 }
@@ -152,14 +143,18 @@ public class GameplayScreen {
 
     public void setupKeyboardEvents(Scene scene) {
         scene.setOnKeyPressed(event -> {
-            if (keyboardHandler != null) {
-                keyboardHandler.keyPressed(event.getCode());
+            if (gameEngine != null && gameEngine.isGameRunning()) {
+                switch (event.getCode()) {
+                    case LEFT -> gameEngine.movePieceLeft();
+                    case RIGHT -> gameEngine.movePieceRight();
+                    case DOWN -> gameEngine.setFastDropEnabled(true);
+                }
             }
         });
         
         scene.setOnKeyReleased(event -> {
-            if (keyboardHandler != null) {
-                keyboardHandler.keyReleased(event.getCode());
+            if (gameEngine != null && event.getCode() == javafx.scene.input.KeyCode.DOWN) {
+                gameEngine.setFastDropEnabled(false);
             }
         });
         
