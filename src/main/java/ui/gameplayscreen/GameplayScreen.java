@@ -13,6 +13,7 @@ import model.GameBoard;
 import model.GameEngine;
 import model.TetrisShape;
 import util.ShapeColors;
+import util.KeyboardHandler;
 
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen {
@@ -26,6 +27,7 @@ public class GameplayScreen {
     private GraphicsContext gc;
     private GameEngine gameEngine;
     private AnimationTimer gameLoop;
+    private KeyboardHandler keyboardHandler;
     
     private static final int CELL_SIZE = 25;
     private static final int PADDING = 0;
@@ -35,6 +37,7 @@ public class GameplayScreen {
     public void initialize() {
         initializeCanvas();
         backButton.setOnAction(event -> onBackButtonClicked());
+        keyboardHandler = new KeyboardHandler();
         initializeGame();
         startGameLoop();
     }
@@ -42,6 +45,9 @@ public class GameplayScreen {
     private void onBackButtonClicked() {
         if (gameLoop != null) {
             gameLoop.stop();
+        }
+        if (gameEngine != null) {
+            gameEngine.stopGame();
         }
         System.out.println("Back button clicked");
     }
@@ -61,11 +67,18 @@ public class GameplayScreen {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                // check for fast drop input
+                if (gameEngine.isGameRunning()) {
+                    boolean isDownPressed = keyboardHandler.isDownArrowPressed();
+                    gameEngine.setFastDropEnabled(isDownPressed);
+                }
+                
                 if (gameEngine.updateGame(now)) {
                     drawGame();
                 }
                 
                 if (!gameEngine.isGameRunning()) {
+                    System.out.println("Game Over!");
                     gameLoop.stop(); // game over
                 }
             }
@@ -137,12 +150,34 @@ public class GameplayScreen {
     }
     
 
+    public void setupKeyboardEvents(Scene scene) {
+        scene.setOnKeyPressed(event -> {
+            if (keyboardHandler != null) {
+                keyboardHandler.keyPressed(event.getCode());
+            }
+        });
+        
+        scene.setOnKeyReleased(event -> {
+            if (keyboardHandler != null) {
+                keyboardHandler.keyReleased(event.getCode());
+            }
+        });
+        
+        // ensure the scene can receive keyboard focus
+        scene.getRoot().setFocusTraversable(true);
+        scene.getRoot().requestFocus();
+    }
+    
     public static Scene getScene() {
         try {
             FXMLLoader loader = new FXMLLoader(GameplayScreen.class.getResource("gameplay.fxml"));
             Parent root = loader.load();
-
-            return new Scene(root, 400, 600);
+            GameplayScreen controller = loader.getController();
+            
+            Scene scene = new Scene(root, 400, 600);
+            controller.setupKeyboardEvents(scene);
+            
+            return scene;
         } catch (Exception e) {
             throw new RuntimeException("Failed to load gameplay screen", e);
         }

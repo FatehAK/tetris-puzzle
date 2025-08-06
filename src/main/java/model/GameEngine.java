@@ -10,6 +10,8 @@ public class GameEngine {
     private boolean gameRunning;
     private long lastDropTime = 0;
     private static final long DROP_INTERVAL = 800_000_000L; // 0.8 seconds in nanoseconds
+    private static final long FAST_DROP_INTERVAL = 50_000_000L; // 0.05 seconds in nanoseconds for fast drop
+    private boolean fastDropEnabled = false;
     private double smoothY = 0.0; // smooth Y position for animation
     
     public GameEngine() {
@@ -53,7 +55,7 @@ public class GameEngine {
         
         // check game over when piece reaches the visible area
         if (!board.isValidPosition(currentPiece, currentPiece.getX(), 0)) {
-            gameRunning = false; // game over - can't place new piece at top of visible area
+            stopGame(); // game over - can't place new piece at top of visible area
         }
     }
     
@@ -102,8 +104,11 @@ public class GameEngine {
             return false;
         }
         
+        // choose drop interval based on fast drop setting
+        long dropInterval = fastDropEnabled ? FAST_DROP_INTERVAL : DROP_INTERVAL;
+        
         // smooth falling animation
-        double deltaTime = (currentTime - lastDropTime) / (double) DROP_INTERVAL;
+        double deltaTime = (currentTime - lastDropTime) / (double) dropInterval;
         
         // update smooth position based on movement capability
         if (board.isValidPosition(currentPiece, currentPiece.getX(), currentPiece.getY() + 1)) {
@@ -113,7 +118,7 @@ public class GameEngine {
         }
         
         // check if enough time has passed for next drop
-        if (currentTime - lastDropTime >= DROP_INTERVAL) {
+        if (currentTime - lastDropTime >= dropInterval) {
             movePieceDown();
             lastDropTime = currentTime;
         }
@@ -123,5 +128,13 @@ public class GameEngine {
     
     public double getSmoothY() {
         return smoothY;
+    }
+    
+    public void setFastDropEnabled(boolean enabled) {
+        fastDropEnabled = enabled;
+    }
+    
+    public boolean isFastDropEnabled() {
+        return fastDropEnabled;
     }
 }
