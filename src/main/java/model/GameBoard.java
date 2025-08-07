@@ -66,4 +66,40 @@ public class GameBoard {
         }
         return null;
     }
+
+    // Line-clearing logic
+    /**
+     * Scans the game board for any full lines (rows where every cell is filled).
+     * For each full line found, clears the line and shifts all rows above it down by one.
+     * Multiple full lines can be cleared in a single call, and the shifting is repeated as needed.
+     * This method modifies the board in place.
+     */
+    public void clearFullRows() {
+        for (int row = 0; row < BOARD_HEIGHT; ) {
+            boolean fullRow = true;
+
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+                if (board[row][col] == null) {
+                    fullRow = false;
+                    break;
+                }
+            }
+
+            if (fullRow) {
+                // Shift all rows above down by one
+                for (int y = row; y > 0; y--) {
+                    System.arraycopy(board[y - 1], 0, board[y], 0, BOARD_WIDTH);
+                }
+
+                // Clear top row
+                for (int col = 0; col < BOARD_WIDTH; col++) {
+                    board[0][col] = null;
+                }
+
+                // Stay on the same row to re-check it after the shift
+            } else {
+                row++; // Only move to the next row if no row was cleared
+            }
+        }
+    }
 }
