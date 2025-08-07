@@ -66,4 +66,36 @@ public class GameBoard {
         }
         return null;
     }
+
+    // Row erase logic
+    public void clearFullLines() {
+        for (int row = BOARD_HEIGHT - 1; row >= 0; row--) {
+            boolean fullLine = true;
+
+            // Check if the row is full
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+                if (board[row][col] == null) {
+                    fullLine = false;
+                    break;
+                }
+            }
+
+            // If full, shift everything above down
+            if (fullLine) {
+                for (int moveRow = row; moveRow > 0; moveRow--) {
+                    for (int col = 0; col < BOARD_WIDTH; col++) {
+                        board[moveRow][col] = board[moveRow - 1][col];
+                    }
+                }
+
+                // Clear top row
+                for (int col = 0; col < BOARD_WIDTH; col++) {
+                    board[0][col] = null;
+                }
+
+                // Re-check this row after shifting
+                row++;
+            }
+        }
+    }
 }
