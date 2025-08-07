@@ -19,10 +19,10 @@ public class GameplayScreen {
 
     @FXML
     private Canvas gameCanvas;
-    
+
     @FXML
     private Button backButton;
-    
+
     private GraphicsContext gc;
     private AnimationTimer gameLoop;
 
