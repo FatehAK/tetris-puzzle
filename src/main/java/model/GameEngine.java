@@ -70,6 +70,7 @@ public class GameEngine implements InputController {
             // can't move down - place piece and spawn new one
             board.placePiece(currentPiece);
             spawnNewPiece();
+            board.clearFullLines();
             return false;
         }
     }
