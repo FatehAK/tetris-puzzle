@@ -3,14 +3,22 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ui.highscorescreen.HighScoreScreen"
-      fx:id="root"
-      prefHeight="400.0" prefWidth="600.0"
-      alignment="CENTER"
-      stylesheets="@highscore.css">
-    
-    <Label text="Hello World - High Score Screen" />
-    
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.highscorescreen.HighScoreScreen" styleClass="high-score-root">
+   <children>
+      <Label fx:id="titleLabel" styleClass="high-score-title" text="HIGH SCORES" />
+      <VBox fx:id="scoreTableContainer" styleClass="score-table">
+         <children>
+            <HBox styleClass="score-header">
+               <children>
+                  <Label styleClass="score-header-text,score-rank" text="Rank"/>
+                  <Label styleClass="score-header-text,score-name" text="Player"/>
+                  <Label styleClass="score-header-text,score-points" text="Score"/>
+                  <Label styleClass="score-header-text,score-date" text="Date"/>
+               </children>
+            </HBox>
+            <VBox fx:id="scoresContainer" />
+         </children>
+      </VBox>
+      <Button fx:id="backButton" styleClass="back-button" text="Back to Menu" onAction="#handleBackButton" />
+   </children>
 </VBox>
