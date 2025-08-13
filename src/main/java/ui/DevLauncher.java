@@ -12,11 +12,7 @@ import ui.configscreen.ConfigScreen;
 import ui.gameplayscreen.GameplayScreen;
 import ui.highscorescreen.HighScoreScreen;
 
-/**
- * DevLauncher.java
- * --------------------------------------
- * Used for launching any individual screen in isolation during development.
- */
+// Used for launching any individual screen in isolation during development.
 public class DevLauncher extends Application {
 
     @Override
