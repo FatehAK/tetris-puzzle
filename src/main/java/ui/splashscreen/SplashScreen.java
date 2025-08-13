@@ -2,24 +2,25 @@ package ui.splashscreen;
 
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import ui.BaseScreen;
 
-public class SplashScreen {
+public class SplashScreen extends BaseScreen {
 
     @FXML
     private VBox root;
+    
+    public void initialize() {}
 
     public void playSplash(Runnable onFinish) {
-        // Fade in
+        // fade in
         FadeTransition fadeIn = new FadeTransition(Duration.seconds(2), root);
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
 
-        // Fade out after delay
+        // fade out after delay
         FadeTransition fadeOut = new FadeTransition(Duration.seconds(2), root);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
@@ -32,16 +33,8 @@ public class SplashScreen {
     }
 
     public static Scene getScene(Runnable onFinish) {
-        try {
-            FXMLLoader loader = new FXMLLoader(SplashScreen.class.getResource("splash.fxml"));
-            Parent root = loader.load();
-
-            SplashScreen controller = loader.getController();
-            controller.playSplash(onFinish);
-
-            return new Scene(root, 600, 400);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load splash screen", e);
-        }
+        LoadResult<SplashScreen> result = loadSceneWithController(SplashScreen.class, "splash.fxml", 600, 400);
+        result.controller().playSplash(onFinish);
+        return result.scene();
     }
 }

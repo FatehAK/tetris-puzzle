@@ -2,15 +2,13 @@ package ui.menuscreen;
 
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import ui.BaseScreen;
 
-import java.io.IOException;
-
-public class MenuScreen {
+public class MenuScreen extends BaseScreen {
 
     @FXML
     private VBox root;
@@ -21,7 +19,7 @@ public class MenuScreen {
     private Runnable onPlay, onConfig, onHighScores, onExit;
 
     public void initialize() {
-        // Wire button actions after FXML is loaded
+        // wire button actions after FXML is loaded
         playBtn.setOnAction(e -> onPlay.run());
         configBtn.setOnAction(e -> onConfig.run());
         scoresBtn.setOnAction(e -> onHighScores.run());
@@ -38,21 +36,13 @@ public class MenuScreen {
         fadeIn.play();
     }
 
-    // Factory method to load the scene with callbacks
     public static Scene getScene(Runnable onPlay, Runnable onConfig, Runnable onHighScores, Runnable onExit) {
-        try {
-            FXMLLoader loader = new FXMLLoader(MenuScreen.class.getResource("menu.fxml"));
-            VBox root = loader.load();
-
-            MenuScreen controller = loader.getController();
-            controller.onPlay = onPlay;
-            controller.onConfig = onConfig;
-            controller.onHighScores = onHighScores;
-            controller.onExit = onExit;
-
-            return new Scene(root, 600, 400);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load menu screen", e);
-        }
+        LoadResult<MenuScreen> result = loadSceneWithController(MenuScreen.class, "menu.fxml", 600, 400);
+        MenuScreen controller = result.controller();
+        controller.onPlay = onPlay;
+        controller.onConfig = onConfig;
+        controller.onHighScores = onHighScores;
+        controller.onExit = onExit;
+        return result.scene();
     }
 }

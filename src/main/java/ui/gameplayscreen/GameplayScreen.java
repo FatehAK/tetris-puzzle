@@ -2,8 +2,6 @@ package ui.gameplayscreen;
 
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -13,10 +11,11 @@ import model.GameBoard;
 import model.GameEngine;
 import model.InputController;
 import model.TetrisShape;
+import ui.BaseScreen;
 import util.ShapeColors;
 
 // JavaFX controller for the main game screen with falling pieces
-public class GameplayScreen {
+public class GameplayScreen extends BaseScreen {
 
     @FXML
     private Canvas gameCanvas;
@@ -168,17 +167,8 @@ public class GameplayScreen {
     }
 
     public static Scene getScene() {
-        try {
-            FXMLLoader loader = new FXMLLoader(GameplayScreen.class.getResource("gameplay.fxml"));
-            Parent root = loader.load();
-            GameplayScreen controller = loader.getController();
-
-            Scene scene = new Scene(root, 400, 600);
-            controller.setupKeyboardEvents(scene);
-
-            return scene;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load gameplay screen", e);
-        }
+        LoadResult<GameplayScreen> result = loadSceneWithController(GameplayScreen.class, "gameplay.fxml", 400, 600);
+        result.controller().setupKeyboardEvents(result.scene());
+        return result.scene();
     }
 }
