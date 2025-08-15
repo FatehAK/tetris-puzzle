@@ -2,8 +2,6 @@ package ui.gameplayscreen;
 
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -13,10 +11,12 @@ import model.GameBoard;
 import model.GameEngine;
 import model.InputController;
 import model.TetrisShape;
+import ui.BaseScreen;
 import util.ShapeColors;
 
 // JavaFX controller for the main game screen with falling pieces
-public class GameplayScreen {
+public class GameplayScreen extends BaseScreen {
+    private boolean paused = false;
 
     @FXML
     private Canvas gameCanvas;
@@ -67,8 +67,10 @@ public class GameplayScreen {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (gameEngine.updateGame(now)) {
-                    drawGame();
+                if (!paused) {
+                    if (gameEngine.updateGame(now)) {
+                        drawGame();
+                    }
                 }
 
                 if (!gameEngine.isGameRunning()) {
@@ -146,12 +148,20 @@ public class GameplayScreen {
 
     public void setupKeyboardEvents(Scene scene) {
         scene.setOnKeyPressed(event -> {
-            if (inputController != null && gameEngine != null && gameEngine.isGameRunning()) {
-                switch (event.getCode()) {
-                    case LEFT -> inputController.moveLeft();
-                    case RIGHT -> inputController.moveRight();
-                    case DOWN -> inputController.setFastDrop(true);
-                    case UP -> inputController.rotate();
+            if (event.getCode() == javafx.scene.input.KeyCode.P) {
+                paused = !paused;
+                System.out.println(paused ? "Game Paused" : "Game Resumed");
+                return;
+            }
+            if (inputController != null && gameEngine != null && gameEngine.isGameRunning() && !paused) {
+                if (event.getCode() == javafx.scene.input.KeyCode.LEFT) {
+                    inputController.moveLeft();
+                } else if (event.getCode() == javafx.scene.input.KeyCode.RIGHT) {
+                    inputController.moveRight();
+                } else if (event.getCode() == javafx.scene.input.KeyCode.DOWN) {
+                    inputController.setFastDrop(true);
+                } else if (event.getCode() == javafx.scene.input.KeyCode.UP) {
+                    inputController.rotate();
                 }
             }
         });
@@ -168,17 +178,8 @@ public class GameplayScreen {
     }
 
     public static Scene getScene() {
-        try {
-            FXMLLoader loader = new FXMLLoader(GameplayScreen.class.getResource("gameplay.fxml"));
-            Parent root = loader.load();
-            GameplayScreen controller = loader.getController();
-
-            Scene scene = new Scene(root, 400, 600);
-            controller.setupKeyboardEvents(scene);
-
-            return scene;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load gameplay screen", e);
-        }
+        LoadResult<GameplayScreen> result = loadSceneWithController(GameplayScreen.class, "gameplay.fxml", 400, 600);
+        result.controller().setupKeyboardEvents(result.scene());
+        return result.scene();
     }
 }

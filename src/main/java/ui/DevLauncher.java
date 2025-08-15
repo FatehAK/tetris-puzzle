@@ -12,11 +12,7 @@ import ui.configscreen.ConfigScreen;
 import ui.gameplayscreen.GameplayScreen;
 import ui.highscorescreen.HighScoreScreen;
 
-/**
- * DevLauncher.java
- * --------------------------------------
- * Used for launching any individual screen in isolation during development.
- */
+// Used for launching any individual screen in isolation during development.
 public class DevLauncher extends Application {
 
     @Override
@@ -44,12 +40,12 @@ public class DevLauncher extends Application {
                         stage.setScene(next);
                         stage.setTitle("DevLauncher - menu");
                     });
-                    case "menu" -> MenuScreen.getScene(
-                            () -> System.out.println("Play pressed"),
-                            () -> System.out.println("Config pressed"),
-                            () -> System.out.println("High Scores pressed"),
-                            () -> System.out.println("Exit pressed")
-                    );
+            case "menu" -> MenuScreen.getSceneWithExitDialog(
+                stage,
+                () -> System.out.println("Play pressed"),
+                () -> System.out.println("Config pressed"),
+                () -> System.out.println("High Scores pressed")
+            );
                     case "config" -> ConfigScreen.getScene();
                     case "highscore" -> HighScoreScreen.getScene();
                     case "gameplay" -> GameplayScreen.getScene();
