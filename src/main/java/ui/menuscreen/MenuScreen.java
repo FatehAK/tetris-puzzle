@@ -5,8 +5,10 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import ui.BaseScreen;
+import ui.ExitDialog;
 
 public class MenuScreen extends BaseScreen {
 
@@ -44,5 +46,22 @@ public class MenuScreen extends BaseScreen {
         controller.onHighScores = onHighScores;
         controller.onExit = onExit;
         return result.scene();
+    }
+
+
+    
+    public static Scene getSceneWithExitDialog(Stage stage, Runnable onPlay, Runnable onConfig, Runnable onHighScores) {
+        return getScene(
+            onPlay,
+            onConfig,
+            onHighScores,
+            () -> {
+                System.out.println("Exit button clicked");
+                boolean confirm = ExitDialog.show(stage);
+                if (confirm) {
+                    stage.close();
+                }
+            }
+        );
     }
 }
