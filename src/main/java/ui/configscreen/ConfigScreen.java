@@ -2,7 +2,6 @@ package ui.configscreen;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import ui.BaseScreen;
 
 public class ConfigScreen extends BaseScreen {
@@ -105,7 +104,7 @@ public class ConfigScreen extends BaseScreen {
     }
 
     public static Scene getScene() {
-        LoadResult<ConfigScreen> result = loadSceneWithController(ConfigScreen.class, "config.fxml", 600, 400);
+        LoadResult<ConfigScreen> result = loadSceneWithController(ConfigScreen.class, "config.fxml", 800, 600);
         result.scene().getStylesheets().add(ConfigScreen.class.getResource("config.css").toExternalForm());
         return result.scene();
     }
