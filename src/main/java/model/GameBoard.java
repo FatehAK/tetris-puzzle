@@ -21,7 +21,6 @@ public class GameBoard {
     }
     
     public boolean isValidPosition(TetrisShape shape, int newX, int newY) {
-        
         for (int row = 0; row < shape.getHeight(); row++) {
             for (int col = 0; col < shape.getWidth(); col++) {
                 if (shape.isCellFilled(row, col)) {

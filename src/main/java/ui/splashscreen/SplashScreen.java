@@ -7,6 +7,8 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import ui.BaseScreen;
 
+// Controller for the splash screen that displays when the application starts
+// This screen shows a fade-in effect followed by a fade-out before transitioning to the main menu
 public class SplashScreen extends BaseScreen {
 
     @FXML

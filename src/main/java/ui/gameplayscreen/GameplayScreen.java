@@ -7,6 +7,10 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import model.GameBoard;
 import model.GameEngine;
 import model.InputController;
@@ -33,6 +37,9 @@ public class GameplayScreen extends BaseScreen {
     private static final int PADDING = 0;
     private static final Color BACKGROUND_COLOR = Color.web("#111111");
     private static final Color BORDER_COLOR = Color.web("#333333");
+    private static final Color PAUSE_TEXT_COLOR = Color.web("#FFFFFF");
+    private long pauseFlashTimer = 0;
+    private Runnable onBackToMenu;
 
     public void initialize() {
         initializeCanvas();
@@ -42,13 +49,63 @@ public class GameplayScreen extends BaseScreen {
     }
 
     private void onBackButtonClicked() {
+        // if game is over, directly go back to menu
+        if (gameEngine == null || !gameEngine.isGameRunning()) {
+            navigateToMenu();
+            return;
+        }
+        
+        boolean wasAlreadyPaused = paused;
+        
+        // pause game if not already paused
+        if (!paused) {
+            paused = true;
+        }
+        
+        // show confirmation dialog
+        if (showStopGameConfirmation()) {
+            // user confirmed - go to menu
+            navigateToMenu();
+        } else {
+            // user cancelled - resume game only if it wasn't already paused
+            if (!wasAlreadyPaused) {
+                paused = false;
+            }
+            // restore keyboard focus to the game scene
+            restoreKeyboardFocus();
+        }
+    }
+    
+    private boolean showStopGameConfirmation() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, 
+                               "Are you sure to stop the current game?", 
+                               ButtonType.YES, ButtonType.NO);
+        alert.setTitle("Confirm Stop Game");
+        alert.setHeaderText(null);
+        
+        ButtonType result = alert.showAndWait().orElse(ButtonType.NO);
+        return result == ButtonType.YES;
+    }
+    
+    private void navigateToMenu() {
         if (gameLoop != null) {
             gameLoop.stop();
         }
         if (gameEngine != null) {
             gameEngine.stopGame();
         }
-        System.out.println("Back button clicked");
+        if (onBackToMenu != null) {
+            onBackToMenu.run();
+        } else {
+            System.out.println("Warning: onBackToMenu callback is null - navigation not configured");
+        }
+    }
+    
+    private void restoreKeyboardFocus() {
+        // restore focus to the game canvas so keyboard controls work again
+        if (gameCanvas != null && gameCanvas.getScene() != null) {
+            gameCanvas.getScene().getRoot().requestFocus();
+        }
     }
 
     private void initializeCanvas() {
@@ -71,6 +128,9 @@ public class GameplayScreen extends BaseScreen {
                     if (gameEngine.updateGame(now)) {
                         drawGame();
                     }
+                } else {
+                    pauseFlashTimer = now;
+                    drawGame(); // redraw to show pause overlay
                 }
 
                 if (!gameEngine.isGameRunning()) {
@@ -132,6 +192,11 @@ public class GameplayScreen extends BaseScreen {
                 }
             }
         }
+        
+        // draw pause overlay if game is paused
+        if (paused) {
+            drawPauseOverlay();
+        }
     }
 
     private void drawCell(double x, double y, int size, String colorName) {
@@ -144,24 +209,44 @@ public class GameplayScreen extends BaseScreen {
         gc.setLineWidth(1);
         gc.strokeRect(x, y, size, size);
     }
+    
+    private void drawPauseOverlay() {
+        // calculate flashing effect based on timer (flash every 500ms)
+        double flashCycle = (pauseFlashTimer / 500_000_000.0) % 2.0; // 0.5 second cycles
+        boolean showText = flashCycle < 1.0; // show text for first half of cycle
+        
+        if (showText) {
+            // semi-transparent overlay
+            gc.setFill(Color.rgb(0, 0, 0, 0.3));
+            gc.fillRect(0, 0, gameCanvas.getWidth(), gameCanvas.getHeight());
+            
+            // pause text
+            gc.setFill(PAUSE_TEXT_COLOR);
+            gc.setFont(Font.font("Arial", 15));
+            gc.setTextAlign(TextAlignment.CENTER);
+            
+            double textX = gameCanvas.getWidth() / 2;
+            double textY = 50; // position at top with padding
+            
+            // split text into two lines
+            gc.fillText("Game is paused.", textX, textY);
+            gc.fillText("Press P to continue.", textX, textY + 20);
+        }
+    }
 
 
     public void setupKeyboardEvents(Scene scene) {
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.P) {
                 paused = !paused;
-                System.out.println(paused ? "Game Paused" : "Game Resumed");
                 return;
             }
             if (inputController != null && gameEngine != null && gameEngine.isGameRunning() && !paused) {
-                if (event.getCode() == javafx.scene.input.KeyCode.LEFT) {
-                    inputController.moveLeft();
-                } else if (event.getCode() == javafx.scene.input.KeyCode.RIGHT) {
-                    inputController.moveRight();
-                } else if (event.getCode() == javafx.scene.input.KeyCode.DOWN) {
-                    inputController.setFastDrop(true);
-                } else if (event.getCode() == javafx.scene.input.KeyCode.UP) {
-                    inputController.rotate();
+                switch (event.getCode()) {
+                    case LEFT -> inputController.moveLeft();
+                    case RIGHT -> inputController.moveRight();
+                    case DOWN -> inputController.setFastDrop(true);
+                    case UP -> inputController.rotate();
                 }
             }
         });
@@ -177,8 +262,9 @@ public class GameplayScreen extends BaseScreen {
         scene.getRoot().requestFocus();
     }
 
-    public static Scene getScene() {
+    public static Scene getScene(Runnable onBackToMenu) {
         LoadResult<GameplayScreen> result = loadSceneWithController(GameplayScreen.class, "gameplay.fxml", 400, 600);
+        result.controller().onBackToMenu = onBackToMenu;
         result.controller().setupKeyboardEvents(result.scene());
         return result.scene();
     }

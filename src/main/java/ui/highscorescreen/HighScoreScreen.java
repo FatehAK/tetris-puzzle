@@ -1,60 +1,28 @@
 package ui.highscorescreen;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import ui.BaseScreen;
 
-public class HighScoreScreen {
+// Controller for the high score screen displaying game leaderboard
+public class HighScoreScreen extends BaseScreen {
 
-    @FXML private VBox root;
-    @FXML private Label titleLabel;
-    @FXML private VBox scoreTableContainer;
-    @FXML private VBox scoresContainer;
-    @FXML private HBox scoreRowContainer;
     @FXML private Button backButton;
     
-    private static Runnable backCallback = () -> {};
+    private Runnable onBack;
 
-    @FXML
     public void initialize() {
+        backButton.setOnAction(e -> {
+            if (onBack != null) {
+                onBack.run();
+            }
+        });
     }
 
-    @FXML
-    private void handleBackButton() {
-        backCallback.run();
-    }
-
-    public static Scene getScene() {
-        return getScene(() -> {});
-    }
-    
     public static Scene getScene(Runnable onBack) {
-        backCallback = onBack;
-        try {
-            FXMLLoader loader = new FXMLLoader(HighScoreScreen.class.getResource("highscore.fxml"));
-            Parent root = loader.load();
-            
-            Scene scene = new Scene(root, 800, 600);
-            scene.getStylesheets().add(HighScoreScreen.class.getResource("highscore.css").toExternalForm());
-            
-            return scene;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to load high score screen", e);
-        }
+        LoadResult<HighScoreScreen> result = loadSceneWithController(HighScoreScreen.class, "highscore.fxml", 800, 600);
+        result.controller().onBack = onBack;
+        return result.scene();
     }
-
-    public void handleBackButton(ActionEvent event) throws Exception {
-        Parent menuRoot = FXMLLoader.load(getClass().getResource("/ui/menuscreen/menu.fxml"));
-        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(menuRoot));
-    }
-
 }
