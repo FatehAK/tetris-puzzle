@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class HighScoreScreen {
@@ -14,26 +15,27 @@ public class HighScoreScreen {
     @FXML private Label titleLabel;
     @FXML private VBox scoreTableContainer;
     @FXML private VBox scoresContainer;
+    @FXML private HBox scoreRowContainer;
     @FXML private Button backButton;
     
     private static Runnable backCallback = () -> {};
 
     @FXML
     public void initialize() {
-        // Add dummy scores to the container
-        String[] scores = {
-            "1. ALICE - 125,000",
-            "2. BOB - 98,750", 
-            "3. CHARLIE - 87,500",
-            "4. DIANA - 76,250",
-            "5. EVE - 65,000"
-        };
+        // // Add dummy scores to the container
+        // String[] scores = {
+        //     "1. ALICE - 125,000",
+        //     "2. BOB - 98,750", 
+        //     "3. CHARLIE - 87,500",
+        //     "4. DIANA - 76,250",
+        //     "5. EVE - 65,000"
+        // };
         
-        for (String score : scores) {
-            Label scoreLabel = new Label(score);
-            scoreLabel.getStyleClass().add("score-text");
-            scoresContainer.getChildren().add(scoreLabel);
-        }
+        // for (String score : scores) {
+        //     Label scoreLabel = new Label(score);
+        //     scoreLabel.getStyleClass().add("score-text");
+        //     scoresContainer.getChildren().add(scoreLabel);
+        // }
     }
 
     @FXML

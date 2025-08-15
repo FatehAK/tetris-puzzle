@@ -29,7 +29,14 @@
     -fx-background-color: rgba(255, 215, 0, 0.2);
     -fx-background-radius: 10;
     -fx-padding: 15;
+    -fx-spacing: 35;
+    -fx-alignment: baseline-left;
+}
+
+.score-row{
+    -fx-padding:0 0 0 15;
     -fx-spacing: 0;
+    -fx-alignment: baseline-left;
 }
 
 .score-header-text {
@@ -39,12 +46,7 @@
     -fx-text-fill: #ffd700;
 }
 
-.score-row {
-    -fx-background-color: rgba(255, 255, 255, 0.05);
-    -fx-background-radius: 8;
-    -fx-padding: 12;
-    -fx-spacing: 0;
-}
+
 
 .score-row:hover {
     -fx-background-color: rgba(255, 255, 255, 0.1);
