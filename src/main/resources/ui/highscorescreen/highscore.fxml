@@ -19,7 +19,6 @@
                      <Label styleClass="score-header-text,score-points" text="5"/>
                   </children>
                </VBox>
-
                <VBox>
                   <children >
                      <Label styleClass="score-header-text,score-rank" text="Name"/>
@@ -30,7 +29,6 @@
                      <Label styleClass="score-header-text,score-points" text="Louis"/>
                   </children>
                </VBox>
-
                <VBox>
                   <children >
                      <Label styleClass="score-header-text,score-rank" text="Score"/>
@@ -41,7 +39,6 @@
                      <Label styleClass="score-header-text,score-points" text="35000"/>
                   </children>
                </VBox>
-
                <VBox>
                   <children >
                      <Label styleClass="score-header-text,score-rank" text="Date"/>
@@ -53,11 +50,6 @@
                   </children>
                </VBox>
             </HBox>
-
-
-
-
-            <VBox fx:id="scoresContainer" />
          </children>
       </VBox>
       <VBox fx:id="backButtonContainer" styleClass="back-button-container">

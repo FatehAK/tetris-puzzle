@@ -1,5 +1,6 @@
 package ui.highscorescreen;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -8,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class HighScoreScreen {
 
@@ -22,20 +24,6 @@ public class HighScoreScreen {
 
     @FXML
     public void initialize() {
-        // // Add dummy scores to the container
-        // String[] scores = {
-        //     "1. ALICE - 125,000",
-        //     "2. BOB - 98,750", 
-        //     "3. CHARLIE - 87,500",
-        //     "4. DIANA - 76,250",
-        //     "5. EVE - 65,000"
-        // };
-        
-        // for (String score : scores) {
-        //     Label scoreLabel = new Label(score);
-        //     scoreLabel.getStyleClass().add("score-text");
-        //     scoresContainer.getChildren().add(scoreLabel);
-        // }
     }
 
     @FXML
@@ -62,4 +50,11 @@ public class HighScoreScreen {
             throw new RuntimeException("Failed to load high score screen", e);
         }
     }
+
+    public void handleBackButton(ActionEvent event) throws Exception {
+        Parent menuRoot = FXMLLoader.load(getClass().getResource("/ui/menuscreen/menu.fxml"));
+        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(menuRoot));
+    }
+
 }
