@@ -19,6 +19,9 @@
             <VBox fx:id="scoresContainer" />
          </children>
       </VBox>
-      <Button fx:id="backButton" styleClass="back-button" text="Back to Menu" onAction="#handleBackButton" />
+      <VBox fx:id="backButtonContainer" styleClass="back-button-container">
+         <Button fx:id="backButton" styleClass="back-button" text="Back to Menu" onAction="#handleBackButton" />
+      </VBox>
+
    </children>
 </VBox>

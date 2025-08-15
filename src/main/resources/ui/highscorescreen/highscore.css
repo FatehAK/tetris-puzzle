@@ -81,6 +81,11 @@
     -fx-text-fill: #dda0dd;
 }
 
+.back-button-container{
+   -fx-alignment: center;
+   -fx-padding: 20 0 0 0;
+}
+
 .back-button {
     -fx-background-color: #3c6382;
     -fx-background-radius: 10;
