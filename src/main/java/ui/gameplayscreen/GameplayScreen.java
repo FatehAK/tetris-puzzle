@@ -16,6 +16,7 @@ import util.ShapeColors;
 
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen extends BaseScreen {
+    private boolean paused = false;
 
     @FXML
     private Canvas gameCanvas;
@@ -66,8 +67,10 @@ public class GameplayScreen extends BaseScreen {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (gameEngine.updateGame(now)) {
-                    drawGame();
+                if (!paused) {
+                    if (gameEngine.updateGame(now)) {
+                        drawGame();
+                    }
                 }
 
                 if (!gameEngine.isGameRunning()) {
@@ -145,12 +148,20 @@ public class GameplayScreen extends BaseScreen {
 
     public void setupKeyboardEvents(Scene scene) {
         scene.setOnKeyPressed(event -> {
-            if (inputController != null && gameEngine != null && gameEngine.isGameRunning()) {
-                switch (event.getCode()) {
-                    case LEFT -> inputController.moveLeft();
-                    case RIGHT -> inputController.moveRight();
-                    case DOWN -> inputController.setFastDrop(true);
-                    case UP -> inputController.rotate();
+            if (event.getCode() == javafx.scene.input.KeyCode.P) {
+                paused = !paused;
+                System.out.println(paused ? "Game Paused" : "Game Resumed");
+                return;
+            }
+            if (inputController != null && gameEngine != null && gameEngine.isGameRunning() && !paused) {
+                if (event.getCode() == javafx.scene.input.KeyCode.LEFT) {
+                    inputController.moveLeft();
+                } else if (event.getCode() == javafx.scene.input.KeyCode.RIGHT) {
+                    inputController.moveRight();
+                } else if (event.getCode() == javafx.scene.input.KeyCode.DOWN) {
+                    inputController.setFastDrop(true);
+                } else if (event.getCode() == javafx.scene.input.KeyCode.UP) {
+                    inputController.rotate();
                 }
             }
         });
