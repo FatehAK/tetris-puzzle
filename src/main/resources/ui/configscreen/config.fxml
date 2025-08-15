@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <!-- Main container for the configuration screen -->
-<VBox styleClass="config-root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.configscreen.ConfigScreen">
+<VBox styleClass="config-root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.configscreen.ConfigScreen" stylesheets="@config.css">
     <children>
 
         <!-- Configuration screen title -->
@@ -61,7 +61,7 @@
         </HBox>
 
         <!-- Back button to return to main menu -->
-        <Button styleClass="menu-button" text="Back" />
+        <Button fx:id="backButton" styleClass="menu-button" text="Back" />
 
     </children>
     <!-- Padding around the entire configuration screen -->

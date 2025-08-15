@@ -46,9 +46,36 @@ public class DevLauncher extends Application {
                 () -> System.out.println("Config pressed"),
                 () -> System.out.println("High Scores pressed")
             );
-                    case "config" -> ConfigScreen.getScene();
-                    case "highscore" -> HighScoreScreen.getScene();
-                    case "gameplay" -> GameplayScreen.getScene();
+                    case "config" -> ConfigScreen.getScene(() -> {
+                        Scene menuScene = MenuScreen.getScene(
+                                () -> System.out.println("Play pressed"),
+                                () -> System.out.println("Config pressed"),
+                                () -> System.out.println("High Scores pressed"),
+                                () -> System.out.println("Exit pressed")
+                        );
+                        stage.setScene(menuScene);
+                        stage.setTitle("DevLauncher - menu");
+                    });
+                    case "highscore" -> HighScoreScreen.getScene(() -> {
+                        Scene menuScene = MenuScreen.getScene(
+                                () -> System.out.println("Play pressed"),
+                                () -> System.out.println("Config pressed"),
+                                () -> System.out.println("High Scores pressed"),
+                                () -> System.out.println("Exit pressed")
+                        );
+                        stage.setScene(menuScene);
+                        stage.setTitle("DevLauncher - menu");
+                    });
+                    case "gameplay" -> GameplayScreen.getScene(() -> {
+                        Scene menuScene = MenuScreen.getScene(
+                                () -> System.out.println("Play pressed"),
+                                () -> System.out.println("Config pressed"),
+                                () -> System.out.println("High Scores pressed"),
+                                () -> System.out.println("Exit pressed")
+                        );
+                        stage.setScene(menuScene);
+                        stage.setTitle("DevLauncher - menu");
+                    });
                     default -> throw new IllegalArgumentException("Unknown screen: " + selected);
                 };
                 stage.setScene(scene);

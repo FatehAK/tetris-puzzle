@@ -10,8 +10,8 @@ import javafx.util.Duration;
 import ui.BaseScreen;
 import ui.ExitDialog;
 
+// Controller for the main menu screen of the Tetris game
 public class MenuScreen extends BaseScreen {
-
     @FXML
     private VBox root;
 
@@ -48,8 +48,6 @@ public class MenuScreen extends BaseScreen {
         return result.scene();
     }
 
-
-    
     public static Scene getSceneWithExitDialog(Stage stage, Runnable onPlay, Runnable onConfig, Runnable onHighScores) {
         return getScene(
             onPlay,
