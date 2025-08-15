@@ -1,16 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ui.configscreen.ConfigScreen"
-      fx:id="root"
-      prefHeight="400.0" prefWidth="600.0"
-      alignment="CENTER"
-      stylesheets="@config.css">
-    
-    <Label text="Hello World - Config Screen" />
-    
+<!-- Main container for the configuration screen -->
+<VBox styleClass="config-root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.configscreen.ConfigScreen">
+    <children>
+
+        <!-- Configuration screen title -->
+        <Label styleClass="config-title" text="Configuration" />
+
+        <!-- Field Width Section - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <Label styleClass="config-label" text="Field Width (No of cells):" />
+            <Slider fx:id="widthSlider" styleClass="config-slider" />
+            <Label fx:id="widthValue" styleClass="config-value" text="10" />
+        </HBox>
+
+        <!-- Field Height Section - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <Label styleClass="config-label" text="Field Height (No of cells):" />
+            <Slider fx:id="heightSlider" styleClass="config-slider" />
+            <Label fx:id="heightValue" styleClass="config-value" text="20" />
+        </HBox>
+
+        <!-- Game Level Section - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <Label styleClass="config-label" text="Game Level:" />
+            <Slider fx:id="levelSlider" styleClass="config-slider" />
+            <Label fx:id="levelValue" styleClass="config-value" text="1" />
+        </HBox>
+
+        <!-- Music Setting - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <CheckBox fx:id="musicCheckBox" styleClass="config-checkbox" />
+            <Label styleClass="config-label" text="Music (On/Off):" />
+            <Label fx:id="musicStatus" styleClass="config-value" text="On" />
+        </HBox>
+
+        <!-- Sound Effect Setting - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <CheckBox fx:id="soundCheckBox" styleClass="config-checkbox" />
+            <Label styleClass="config-label" text="Sound Effect (On/Off):" />
+            <Label fx:id="soundStatus" styleClass="config-value" text="On" />
+        </HBox>
+
+        <!-- AI Play Setting - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <CheckBox fx:id="aiCheckBox" styleClass="config-checkbox" />
+            <Label styleClass="config-label" text="AI Play (On/Off):" />
+            <Label fx:id="aiStatus" styleClass="config-value" text="Off" />
+        </HBox>
+
+        <!-- Extended Mode Setting - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <CheckBox fx:id="extendCheckBox" styleClass="config-checkbox" />
+            <Label styleClass="config-label" text="Extend Mode (On/Off):" />
+            <Label fx:id="extendStatus" styleClass="config-value" text="Off" />
+        </HBox>
+
+        <!-- Back button to return to main menu -->
+        <Button styleClass="menu-button" text="Back" />
+
+    </children>
+    <!-- Padding around the entire configuration screen -->
+    <padding>
+        <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+    </padding>
 </VBox>
