@@ -1,6 +1,7 @@
 package ui.gameplayscreen;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -16,6 +17,7 @@ import model.GameEngine;
 import model.InputController;
 import model.TetrisShape;
 import ui.BaseScreen;
+import ui.GameOverDialog;
 import util.ShapeColors;
 
 // JavaFX controller for the main game screen with falling pieces
@@ -38,7 +40,6 @@ public class GameplayScreen extends BaseScreen {
     private static final Color BACKGROUND_COLOR = Color.web("#111111");
     private static final Color BORDER_COLOR = Color.web("#333333");
     private static final Color PAUSE_TEXT_COLOR = Color.web("#FFFFFF");
-    private long pauseFlashTimer = 0;
     private Runnable onBackToMenu;
 
     public void initialize() {
@@ -107,6 +108,32 @@ public class GameplayScreen extends BaseScreen {
             gameCanvas.getScene().getRoot().requestFocus();
         }
     }
+    
+    private void handleGameOver() {
+        GameOverDialog.GameOverAction action = GameOverDialog.show(gameCanvas.getScene().getWindow());
+        
+        if (action == GameOverDialog.GameOverAction.PLAY_AGAIN) {
+            // restart the game
+            restartGame();
+        } else {
+            // exit to menu
+            navigateToMenu();
+        }
+    }
+    
+    private void restartGame() {
+        // stop current game if running
+        if (gameEngine != null) {
+            gameEngine.stopGame();
+        }
+        
+        // reset pause state
+        paused = false;
+        
+        // initialize new game
+        initializeGame();
+        startGameLoop();
+    }
 
     private void initializeCanvas() {
         gc = gameCanvas.getGraphicsContext2D();
@@ -129,13 +156,13 @@ public class GameplayScreen extends BaseScreen {
                         drawGame();
                     }
                 } else {
-                    pauseFlashTimer = now;
                     drawGame(); // redraw to show pause overlay
                 }
 
                 if (!gameEngine.isGameRunning()) {
-                    System.out.println("Game Over!");
                     gameLoop.stop(); // game over
+                    // defer dialog showing to avoid IllegalStateException
+                    Platform.runLater(() -> handleGameOver());
                 }
             }
         };
@@ -211,27 +238,21 @@ public class GameplayScreen extends BaseScreen {
     }
     
     private void drawPauseOverlay() {
-        // calculate flashing effect based on timer (flash every 500ms)
-        double flashCycle = (pauseFlashTimer / 500_000_000.0) % 2.0; // 0.5 second cycles
-        boolean showText = flashCycle < 1.0; // show text for first half of cycle
+        // semi-transparent overlay
+        gc.setFill(Color.rgb(0, 0, 0, 0.3));
+        gc.fillRect(0, 0, gameCanvas.getWidth(), gameCanvas.getHeight());
         
-        if (showText) {
-            // semi-transparent overlay
-            gc.setFill(Color.rgb(0, 0, 0, 0.3));
-            gc.fillRect(0, 0, gameCanvas.getWidth(), gameCanvas.getHeight());
-            
-            // pause text
-            gc.setFill(PAUSE_TEXT_COLOR);
-            gc.setFont(Font.font("Arial", 15));
-            gc.setTextAlign(TextAlignment.CENTER);
-            
-            double textX = gameCanvas.getWidth() / 2;
-            double textY = 50; // position at top with padding
-            
-            // split text into two lines
-            gc.fillText("Game is paused.", textX, textY);
-            gc.fillText("Press P to continue.", textX, textY + 20);
-        }
+        // pause text
+        gc.setFill(PAUSE_TEXT_COLOR);
+        gc.setFont(Font.font("Arial", 15));
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        double textX = gameCanvas.getWidth() / 2;
+        double textY = 50; // position at top with padding
+        
+        // split text into two lines
+        gc.fillText("Game is paused.", textX, textY);
+        gc.fillText("Press P to continue.", textX, textY + 20);
     }
 
 
