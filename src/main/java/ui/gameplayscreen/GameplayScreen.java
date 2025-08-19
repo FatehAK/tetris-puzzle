@@ -1,6 +1,7 @@
 package ui.gameplayscreen;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -16,6 +17,7 @@ import model.GameEngine;
 import model.InputController;
 import model.TetrisShape;
 import ui.BaseScreen;
+import ui.GameOverDialog;
 import util.ShapeColors;
 
 // JavaFX controller for the main game screen with falling pieces
@@ -106,6 +108,32 @@ public class GameplayScreen extends BaseScreen {
             gameCanvas.getScene().getRoot().requestFocus();
         }
     }
+    
+    private void handleGameOver() {
+        GameOverDialog.GameOverAction action = GameOverDialog.show(gameCanvas.getScene().getWindow());
+        
+        if (action == GameOverDialog.GameOverAction.PLAY_AGAIN) {
+            // restart the game
+            restartGame();
+        } else {
+            // exit to menu
+            navigateToMenu();
+        }
+    }
+    
+    private void restartGame() {
+        // stop current game if running
+        if (gameEngine != null) {
+            gameEngine.stopGame();
+        }
+        
+        // reset pause state
+        paused = false;
+        
+        // initialize new game
+        initializeGame();
+        startGameLoop();
+    }
 
     private void initializeCanvas() {
         gc = gameCanvas.getGraphicsContext2D();
@@ -132,8 +160,9 @@ public class GameplayScreen extends BaseScreen {
                 }
 
                 if (!gameEngine.isGameRunning()) {
-                    System.out.println("Game Over!");
                     gameLoop.stop(); // game over
+                    // defer dialog showing to avoid IllegalStateException
+                    Platform.runLater(() -> handleGameOver());
                 }
             }
         };
