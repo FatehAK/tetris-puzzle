@@ -20,15 +20,21 @@ public class ConfigScreen extends BaseScreen {
     // checkboxes for on/off settings
     @FXML private CheckBox musicCheckBox;
     @FXML private CheckBox soundCheckBox;
-    @FXML private CheckBox aiCheckBox;
     @FXML private CheckBox extendCheckBox;
+
+    // radio buttons for player types
+    @FXML private RadioButton playerOneHuman;
+    @FXML private RadioButton playerOneAI;
+    @FXML private RadioButton playerOneExternal;
+    @FXML private RadioButton playerTwoHuman;
+    @FXML private RadioButton playerTwoAI;
+    @FXML private RadioButton playerTwoExternal;
 
     // status labels for checkboxes (display On/Off)
     @FXML private Label musicStatus;
     @FXML private Label soundStatus;
-    @FXML private Label aiStatus;
     @FXML private Label extendStatus;
-    
+
     // back button
     @FXML private Button backButton;
     
@@ -43,6 +49,7 @@ public class ConfigScreen extends BaseScreen {
         setupFieldHeightSlider();
         setupGameLevelSlider();
         setupCheckboxes();
+        setupRadioButtons();
         setupBackButton();
     }
     
@@ -54,8 +61,16 @@ public class ConfigScreen extends BaseScreen {
         
         musicCheckBox.setSelected(gameConfig.isMusicEnabled());
         soundCheckBox.setSelected(gameConfig.isSoundEnabled());
-        aiCheckBox.setSelected(gameConfig.isAiEnabled());
         extendCheckBox.setSelected(gameConfig.isExtendedMode());
+        
+        // set player one type based on AI setting
+        if (gameConfig.isAiEnabled()) {
+            playerOneAI.setSelected(true);
+        } else {
+            playerOneHuman.setSelected(true);
+        }
+        // player two defaults to Human (dummy for now)
+        playerTwoHuman.setSelected(true);
         
         updateStatusLabels();
     }
@@ -68,7 +83,6 @@ public class ConfigScreen extends BaseScreen {
         
         musicStatus.setText(gameConfig.isMusicEnabled() ? "On" : "Off");
         soundStatus.setText(gameConfig.isSoundEnabled() ? "On" : "Off");
-        aiStatus.setText(gameConfig.isAiEnabled() ? "On" : "Off");
         extendStatus.setText(gameConfig.isExtendedMode() ? "On" : "Off");
     }
 
@@ -135,19 +149,50 @@ public class ConfigScreen extends BaseScreen {
             gameConfig.setSoundEnabled(selected);
         });
 
-        // AI play checkbox
-        aiCheckBox.setOnAction(e -> {
-            boolean selected = aiCheckBox.isSelected();
-            aiStatus.setText(selected ? "On" : "Off");
-            gameConfig.setAiEnabled(selected);
-        });
-
         // extended mode checkbox
         extendCheckBox.setOnAction(e -> {
             boolean selected = extendCheckBox.isSelected();
             extendStatus.setText(selected ? "On" : "Off");
             gameConfig.setExtendedMode(selected);
+            updatePlayerTwoRadioButtons(selected);
         });
+    }
+    
+    // sets up radio button groups for player types
+    private void setupRadioButtons() {
+        // create toggle groups
+        // toggle groups for radio buttons
+        ToggleGroup playerOneGroup = new ToggleGroup();
+        ToggleGroup playerTwoGroup = new ToggleGroup();
+        
+        // assign radio buttons to groups
+        playerOneHuman.setToggleGroup(playerOneGroup);
+        playerOneAI.setToggleGroup(playerOneGroup);
+        playerOneExternal.setToggleGroup(playerOneGroup);
+        
+        playerTwoHuman.setToggleGroup(playerTwoGroup);
+        playerTwoAI.setToggleGroup(playerTwoGroup);
+        playerTwoExternal.setToggleGroup(playerTwoGroup);
+        
+        // add listener for player one type changes (only AI matters for game config)
+        playerOneGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+            gameConfig.setAiEnabled(newToggle == playerOneAI);
+        });
+        
+        // player two group listener (dummy - no functionality yet)
+        playerTwoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+            // Placeholder for future player two functionality
+        });
+        
+        // initialize player two radio buttons state based on extended mode
+        updatePlayerTwoRadioButtons(gameConfig.isExtendedMode());
+    }
+    
+    // enable or disable player two radio buttons based on extended mode
+    private void updatePlayerTwoRadioButtons(boolean enabled) {
+        playerTwoHuman.setDisable(!enabled);
+        playerTwoAI.setDisable(!enabled);
+        playerTwoExternal.setDisable(!enabled);
     }
     
     // sets up the back button
@@ -162,7 +207,7 @@ public class ConfigScreen extends BaseScreen {
     }
 
     public static Scene getScene(Runnable onBack) {
-        LoadResult<ConfigScreen> result = loadSceneWithController(ConfigScreen.class, "config.fxml", 800, 600);
+        LoadResult<ConfigScreen> result = loadSceneWithController(ConfigScreen.class, "config.fxml", 700, 640);
         result.controller().onBack = onBack;
         return result.scene();
     }
