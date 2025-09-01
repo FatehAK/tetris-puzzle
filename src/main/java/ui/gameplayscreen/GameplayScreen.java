@@ -19,7 +19,7 @@ import model.TetrisShape;
 import ui.BaseScreen;
 import ui.GameOverDialog;
 import util.ShapeColors;
-import util.GameConfig;
+import ui.configscreen.GameConfig;
 
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen extends BaseScreen {
@@ -147,7 +147,7 @@ public class GameplayScreen extends BaseScreen {
         
         // apply AI setting from configuration
         GameConfig config = GameConfig.getInstance();
-        gameEngine.setAIEnabled(config.isAiEnabled());
+        gameEngine.setAIEnabled(config.getPlayer1Type() == GameConfig.PlayerType.AI);
         
         gameEngine.startGame();
         drawGame(); // initial draw after game engine is ready

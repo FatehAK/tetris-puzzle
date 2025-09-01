@@ -3,7 +3,6 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import ui.BaseScreen;
-import util.GameConfig;
 
 // csontroller for the configuration screen where users can set game options
 public class ConfigScreen extends BaseScreen {
@@ -30,7 +29,6 @@ public class ConfigScreen extends BaseScreen {
     @FXML private RadioButton playerTwoAI;
     @FXML private RadioButton playerTwoExternal;
 
-    // status labels for checkboxes (display On/Off)
     @FXML private Label musicStatus;
     @FXML private Label soundStatus;
     @FXML private Label extendStatus;
@@ -41,7 +39,6 @@ public class ConfigScreen extends BaseScreen {
     private Runnable onBack;
     private GameConfig gameConfig;
 
-    // initialize method
     public void initialize() {
         gameConfig = GameConfig.getInstance();
         loadExistingSettings();
@@ -63,14 +60,18 @@ public class ConfigScreen extends BaseScreen {
         soundCheckBox.setSelected(gameConfig.isSoundEnabled());
         extendCheckBox.setSelected(gameConfig.isExtendedMode());
         
-        // set player one type based on AI setting
-        if (gameConfig.isAiEnabled()) {
-            playerOneAI.setSelected(true);
-        } else {
-            playerOneHuman.setSelected(true);
+        // set player types based on config
+        switch (gameConfig.getPlayer1Type()) {
+            case HUMAN -> playerOneHuman.setSelected(true);
+            case AI -> playerOneAI.setSelected(true);
+            case EXTERNAL -> playerOneExternal.setSelected(true);
         }
-        // player two defaults to Human (dummy for now)
-        playerTwoHuman.setSelected(true);
+        
+        switch (gameConfig.getPlayer2Type()) {
+            case HUMAN -> playerTwoHuman.setSelected(true);
+            case AI -> playerTwoAI.setSelected(true);
+            case EXTERNAL -> playerTwoExternal.setSelected(true);
+        }
         
         updateStatusLabels();
     }
@@ -94,7 +95,6 @@ public class ConfigScreen extends BaseScreen {
         widthSlider.setShowTickLabels(true);
         widthSlider.setShowTickMarks(true);
         widthSlider.setMajorTickUnit(1);
-        // update value label when slider moves
         widthSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
             int value = newVal.intValue();
             widthValue.setText(String.valueOf(value));
@@ -110,7 +110,6 @@ public class ConfigScreen extends BaseScreen {
         heightSlider.setShowTickLabels(true);
         heightSlider.setShowTickMarks(true);
         heightSlider.setMajorTickUnit(1);
-        // update value label when slider moves
         heightSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
             int value = newVal.intValue();
             heightValue.setText(String.valueOf(value));
@@ -126,7 +125,6 @@ public class ConfigScreen extends BaseScreen {
         levelSlider.setShowTickLabels(true);
         levelSlider.setShowTickMarks(true);
         levelSlider.setMajorTickUnit(1);
-        // update value label when slider moves
         levelSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
             int value = newVal.intValue();
             levelValue.setText(String.valueOf(value));
@@ -160,12 +158,9 @@ public class ConfigScreen extends BaseScreen {
     
     // sets up radio button groups for player types
     private void setupRadioButtons() {
-        // create toggle groups
-        // toggle groups for radio buttons
         ToggleGroup playerOneGroup = new ToggleGroup();
         ToggleGroup playerTwoGroup = new ToggleGroup();
         
-        // assign radio buttons to groups
         playerOneHuman.setToggleGroup(playerOneGroup);
         playerOneAI.setToggleGroup(playerOneGroup);
         playerOneExternal.setToggleGroup(playerOneGroup);
@@ -174,14 +169,24 @@ public class ConfigScreen extends BaseScreen {
         playerTwoAI.setToggleGroup(playerTwoGroup);
         playerTwoExternal.setToggleGroup(playerTwoGroup);
         
-        // add listener for player one type changes (only AI matters for game config)
         playerOneGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            gameConfig.setAiEnabled(newToggle == playerOneAI);
+            if (newToggle == playerOneHuman) {
+                gameConfig.setPlayer1Type(GameConfig.PlayerType.HUMAN);
+            } else if (newToggle == playerOneAI) {
+                gameConfig.setPlayer1Type(GameConfig.PlayerType.AI);
+            } else if (newToggle == playerOneExternal) {
+                gameConfig.setPlayer1Type(GameConfig.PlayerType.EXTERNAL);
+            }
         });
         
-        // player two group listener (dummy - no functionality yet)
         playerTwoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            // Placeholder for future player two functionality
+            if (newToggle == playerTwoHuman) {
+                gameConfig.setPlayer2Type(GameConfig.PlayerType.HUMAN);
+            } else if (newToggle == playerTwoAI) {
+                gameConfig.setPlayer2Type(GameConfig.PlayerType.AI);
+            } else if (newToggle == playerTwoExternal) {
+                gameConfig.setPlayer2Type(GameConfig.PlayerType.EXTERNAL);
+            }
         });
         
         // initialize player two radio buttons state based on extended mode
