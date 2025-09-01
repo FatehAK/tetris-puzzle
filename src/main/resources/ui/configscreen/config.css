@@ -83,6 +83,12 @@
     -fx-border-color: #f1c40f;
 }
 
+/* Radio button text styling */
+.config-radio {
+    -fx-text-fill: #ecf0f1;
+    -fx-font-size: 14px;
+}
+
 /* Back button styling */
 .menu-button {
     -fx-background-color: #3c6382;

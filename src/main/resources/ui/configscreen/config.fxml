@@ -46,18 +46,31 @@
             <Label fx:id="soundStatus" styleClass="config-value" text="On" />
         </HBox>
 
-        <!-- AI Play Setting - Horizontal Layout -->
-        <HBox styleClass="config-row">
-            <CheckBox fx:id="aiCheckBox" styleClass="config-checkbox" />
-            <Label styleClass="config-label" text="AI Play (On/Off):" />
-            <Label fx:id="aiStatus" styleClass="config-value" text="Off" />
-        </HBox>
-
         <!-- Extended Mode Setting - Horizontal Layout -->
         <HBox styleClass="config-row">
             <CheckBox fx:id="extendCheckBox" styleClass="config-checkbox" />
             <Label styleClass="config-label" text="Extend Mode (On/Off):" />
             <Label fx:id="extendStatus" styleClass="config-value" text="Off" />
+        </HBox>
+
+        <!-- Player One Type Setting - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <Label styleClass="config-label" text="Player One Type:" />
+            <HBox spacing="15">
+                <RadioButton fx:id="playerOneHuman" text="Human" styleClass="config-radio" />
+                <RadioButton fx:id="playerOneAI" text="AI" styleClass="config-radio" />
+                <RadioButton fx:id="playerOneExternal" text="External" styleClass="config-radio" />
+            </HBox>
+        </HBox>
+
+        <!-- Player Two Type Setting - Horizontal Layout -->
+        <HBox styleClass="config-row">
+            <Label styleClass="config-label" text="Player Two Type:" />
+            <HBox spacing="15">
+                <RadioButton fx:id="playerTwoHuman" text="Human" styleClass="config-radio" />
+                <RadioButton fx:id="playerTwoAI" text="AI" styleClass="config-radio" />
+                <RadioButton fx:id="playerTwoExternal" text="External" styleClass="config-radio" />
+            </HBox>
         </HBox>
 
         <!-- Back button to return to main menu -->
