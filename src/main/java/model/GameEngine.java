@@ -14,10 +14,17 @@ public class GameEngine implements InputController {
     private boolean fastDropEnabled = false;
     private double smoothY = 0.0; // smooth Y position for animation
     
+    // AI related fields
+    private boolean aiEnabled = false;
+    private TetrisAI tetrisAI;
+    private TetrisAI.Move pendingAIMove = null;
+    private int aiRotationsCompleted = 0;
+    
     public GameEngine() {
         board = new GameBoard();
         random = new Random();
         gameRunning = false;
+        tetrisAI = new TetrisAI();
     }
     
     public void startGame() {
@@ -43,6 +50,16 @@ public class GameEngine implements InputController {
         return currentPiece;
     }
     
+    // AI mode controls
+    public void setAIEnabled(boolean enabled) {
+        this.aiEnabled = enabled;
+        pendingAIMove = null; // clear any pending move when toggling AI
+    }
+    
+    public boolean isAIEnabled() {
+        return aiEnabled;
+    }
+    
     public void spawnNewPiece() {
         TetrisShape.ShapeType[] types = TetrisShape.ShapeType.values();
         TetrisShape.ShapeType randomType = types[random.nextInt(types.length)]; // pick random shape
@@ -56,6 +73,12 @@ public class GameEngine implements InputController {
         // check game over - piece can't be placed at spawn position
         if (!board.isValidPosition(currentPiece, startX, startY)) {
             stopGame(); // game over - can't spawn new piece at all
+        }
+        
+        // calculate AI move for new piece if AI is enabled
+        if (aiEnabled && currentPiece != null) {
+            pendingAIMove = tetrisAI.findBestMove(board, currentPiece);
+            aiRotationsCompleted = 0; // reset rotation counter for new piece
         }
     }
     
@@ -183,8 +206,13 @@ public class GameEngine implements InputController {
             return false;
         }
         
-        // choose drop interval based on fast drop setting
-        long dropInterval = fastDropEnabled ? FAST_DROP_INTERVAL : DROP_INTERVAL;
+        // execute AI move if enabled and piece is in visible area
+        if (aiEnabled && pendingAIMove != null && currentPiece.getY() >= 0) {
+            executeNextAIAction();
+        }
+        
+        // choose drop interval based on fast drop setting or AI mode
+        long dropInterval = (fastDropEnabled || aiEnabled) ? FAST_DROP_INTERVAL : DROP_INTERVAL;
         
         // smooth falling animation
         double deltaTime = (currentTime - lastDropTime) / (double) dropInterval;
@@ -207,6 +235,34 @@ public class GameEngine implements InputController {
     
     public double getSmoothY() {
         return smoothY;
+    }
+    
+    // execute one AI action at a time with delay
+    private void executeNextAIAction() {
+        if (pendingAIMove == null || currentPiece == null) {
+            return;
+        }
+        
+        // first, handle rotations
+        if (aiRotationsCompleted < pendingAIMove.rotations()) {
+            rotatePiece();
+            aiRotationsCompleted++;
+        } else if (currentPiece.getX() < pendingAIMove.column()) {
+            movePieceRight();
+        } else if (currentPiece.getX() > pendingAIMove.column()) {
+            movePieceLeft();
+        } else {
+            // finally, clear the pending move
+            pendingAIMove = null;
+            return; // no delay needed when clearing move
+        }
+        
+        // add delay after any action
+        try {
+            Thread.sleep(50); // 50ms delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
     
     public void setFastDropEnabled(boolean enabled) {

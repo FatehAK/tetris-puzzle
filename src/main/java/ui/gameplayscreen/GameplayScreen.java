@@ -19,6 +19,7 @@ import model.TetrisShape;
 import ui.BaseScreen;
 import ui.GameOverDialog;
 import util.ShapeColors;
+import util.GameConfig;
 
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen extends BaseScreen {
@@ -143,6 +144,11 @@ public class GameplayScreen extends BaseScreen {
     private void initializeGame() {
         gameEngine = new GameEngine();
         inputController = gameEngine; // use interface for input controls
+        
+        // apply AI setting from configuration
+        GameConfig config = GameConfig.getInstance();
+        gameEngine.setAIEnabled(config.isAiEnabled());
+        
         gameEngine.startGame();
         drawGame(); // initial draw after game engine is ready
     }
@@ -262,7 +268,7 @@ public class GameplayScreen extends BaseScreen {
                 paused = !paused;
                 return;
             }
-            if (inputController != null && gameEngine != null && gameEngine.isGameRunning() && !paused) {
+            if (inputController != null && gameEngine != null && gameEngine.isGameRunning() && !paused && !gameEngine.isAIEnabled()) {
                 switch (event.getCode()) {
                     case LEFT -> inputController.moveLeft();
                     case RIGHT -> inputController.moveRight();
@@ -273,7 +279,7 @@ public class GameplayScreen extends BaseScreen {
         });
 
         scene.setOnKeyReleased(event -> {
-            if (inputController != null && event.getCode() == javafx.scene.input.KeyCode.DOWN) {
+            if (inputController != null && event.getCode() == javafx.scene.input.KeyCode.DOWN && !gameEngine.isAIEnabled()) {
                 inputController.setFastDrop(false);
             }
         });
