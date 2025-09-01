@@ -3,8 +3,9 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import ui.BaseScreen;
+import util.GameConfig;
 
-// Controller for the configuration screen where users can set game options
+// csontroller for the configuration screen where users can set game options
 public class ConfigScreen extends BaseScreen {
     // FXML injected UI components
     @FXML private Slider widthSlider;
@@ -32,27 +33,58 @@ public class ConfigScreen extends BaseScreen {
     @FXML private Button backButton;
     
     private Runnable onBack;
+    private GameConfig gameConfig;
 
     // initialize method
     public void initialize() {
+        gameConfig = GameConfig.getInstance();
+        loadExistingSettings();
         setupFieldWidthSlider();
         setupFieldHeightSlider();
         setupGameLevelSlider();
         setupCheckboxes();
         setupBackButton();
     }
+    
+    // load existing settings from game config
+    private void loadExistingSettings() {
+        widthSlider.setValue(gameConfig.getFieldWidth());
+        heightSlider.setValue(gameConfig.getFieldHeight());
+        levelSlider.setValue(gameConfig.getGameLevel());
+        
+        musicCheckBox.setSelected(gameConfig.isMusicEnabled());
+        soundCheckBox.setSelected(gameConfig.isSoundEnabled());
+        aiCheckBox.setSelected(gameConfig.isAiEnabled());
+        extendCheckBox.setSelected(gameConfig.isExtendedMode());
+        
+        updateStatusLabels();
+    }
+    
+    // update status labels to match current settings
+    private void updateStatusLabels() {
+        widthValue.setText(String.valueOf(gameConfig.getFieldWidth()));
+        heightValue.setText(String.valueOf(gameConfig.getFieldHeight()));
+        levelValue.setText(String.valueOf(gameConfig.getGameLevel()));
+        
+        musicStatus.setText(gameConfig.isMusicEnabled() ? "On" : "Off");
+        soundStatus.setText(gameConfig.isSoundEnabled() ? "On" : "Off");
+        aiStatus.setText(gameConfig.isAiEnabled() ? "On" : "Off");
+        extendStatus.setText(gameConfig.isExtendedMode() ? "On" : "Off");
+    }
 
-    // sets up the field width slider (5-30 cells)
+    // sets up the field width slider (5-15 cells)
     private void setupFieldWidthSlider() {
         widthSlider.setMin(5);
-        widthSlider.setMax(30);
+        widthSlider.setMax(15);
         widthSlider.setValue(10);
         widthSlider.setShowTickLabels(true);
         widthSlider.setShowTickMarks(true);
-        widthSlider.setMajorTickUnit(5);
+        widthSlider.setMajorTickUnit(1);
         // update value label when slider moves
         widthSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            widthValue.setText(String.valueOf(newVal.intValue()));
+            int value = newVal.intValue();
+            widthValue.setText(String.valueOf(value));
+            gameConfig.setFieldWidth(value);
         });
     }
 
@@ -63,10 +95,12 @@ public class ConfigScreen extends BaseScreen {
         heightSlider.setValue(20);
         heightSlider.setShowTickLabels(true);
         heightSlider.setShowTickMarks(true);
-        heightSlider.setMajorTickUnit(5);
+        heightSlider.setMajorTickUnit(1);
         // update value label when slider moves
         heightSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            heightValue.setText(String.valueOf(newVal.intValue()));
+            int value = newVal.intValue();
+            heightValue.setText(String.valueOf(value));
+            gameConfig.setFieldHeight(value);
         });
     }
 
@@ -80,33 +114,39 @@ public class ConfigScreen extends BaseScreen {
         levelSlider.setMajorTickUnit(1);
         // update value label when slider moves
         levelSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            levelValue.setText(String.valueOf(newVal.intValue()));
+            int value = newVal.intValue();
+            levelValue.setText(String.valueOf(value));
+            gameConfig.setGameLevel(value);
         });
     }
     // sets up all the checkboxes
     private void setupCheckboxes() {
         // music checkbox
-        musicCheckBox.setSelected(true);
         musicCheckBox.setOnAction(e -> {
-            musicStatus.setText(musicCheckBox.isSelected() ? "On" : "Off");
+            boolean selected = musicCheckBox.isSelected();
+            musicStatus.setText(selected ? "On" : "Off");
+            gameConfig.setMusicEnabled(selected);
         });
 
         // sound effects checkbox
-        soundCheckBox.setSelected(true);
         soundCheckBox.setOnAction(e -> {
-            soundStatus.setText(soundCheckBox.isSelected() ? "On" : "Off");
+            boolean selected = soundCheckBox.isSelected();
+            soundStatus.setText(selected ? "On" : "Off");
+            gameConfig.setSoundEnabled(selected);
         });
 
         // AI play checkbox
-        aiCheckBox.setSelected(false);
         aiCheckBox.setOnAction(e -> {
-            aiStatus.setText(aiCheckBox.isSelected() ? "On" : "Off");
+            boolean selected = aiCheckBox.isSelected();
+            aiStatus.setText(selected ? "On" : "Off");
+            gameConfig.setAiEnabled(selected);
         });
 
         // extended mode checkbox
-        extendCheckBox.setSelected(false);
         extendCheckBox.setOnAction(e -> {
-            extendStatus.setText(extendCheckBox.isSelected() ? "On" : "Off");
+            boolean selected = extendCheckBox.isSelected();
+            extendStatus.setText(selected ? "On" : "Off");
+            gameConfig.setExtendedMode(selected);
         });
     }
     
