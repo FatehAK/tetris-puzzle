@@ -1,11 +1,17 @@
-package util;
+package ui.configscreen;
 
 // holds game configuration settings that can be shared between screens
 public class GameConfig {
+    
+    public enum PlayerType {
+        HUMAN, AI, EXTERNAL
+    }
+    
     private static GameConfig instance = null;
     
     // configuration settings
-    private boolean aiEnabled = false;
+    private PlayerType player1Type = PlayerType.HUMAN;
+    private PlayerType player2Type = PlayerType.HUMAN;
     private boolean musicEnabled = true;
     private boolean soundEnabled = true;
     private boolean extendedMode = false;
@@ -13,11 +19,8 @@ public class GameConfig {
     private int fieldHeight = 20;
     private int gameLevel = 1;
     
-    private GameConfig() {
-        // private constructor for singleton
-    }
+    private GameConfig() {}
     
-    // get singleton instance
     public static GameConfig getInstance() {
         if (instance == null) {
             instance = new GameConfig();
@@ -25,13 +28,21 @@ public class GameConfig {
         return instance;
     }
     
-    // AI setting
-    public boolean isAiEnabled() {
-        return aiEnabled;
+    // player type settings
+    public PlayerType getPlayer1Type() {
+        return player1Type;
     }
     
-    public void setAiEnabled(boolean aiEnabled) {
-        this.aiEnabled = aiEnabled;
+    public void setPlayer1Type(PlayerType player1Type) {
+        this.player1Type = player1Type;
+    }
+    
+    public PlayerType getPlayer2Type() {
+        return player2Type;
+    }
+    
+    public void setPlayer2Type(PlayerType player2Type) {
+        this.player2Type = player2Type;
     }
     
     // music setting
