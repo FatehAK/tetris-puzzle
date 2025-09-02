@@ -19,6 +19,7 @@ import model.TetrisShape;
 import ui.BaseScreen;
 import ui.GameOverDialog;
 import util.ShapeColors;
+import util.ServerMonitor;
 import ui.configscreen.GameConfig;
 
 // JavaFX controller for the main game screen with falling pieces
@@ -42,6 +43,7 @@ public class GameplayScreen extends BaseScreen {
     private static final Color BORDER_COLOR = Color.web("#333333");
     private static final Color PAUSE_TEXT_COLOR = Color.web("#FFFFFF");
     private Runnable onBackToMenu;
+    private final ServerMonitor serverMonitor = new ServerMonitor();
 
     public void initialize() {
         initializeCanvas();
@@ -93,9 +95,11 @@ public class GameplayScreen extends BaseScreen {
         if (gameLoop != null) {
             gameLoop.stop();
         }
+        serverMonitor.stop();
         if (gameEngine != null) {
             gameEngine.stopGame();
         }
+        serverMonitor.hideDialog();
         if (onBackToMenu != null) {
             onBackToMenu.run();
         } else {
@@ -151,6 +155,11 @@ public class GameplayScreen extends BaseScreen {
         
         gameEngine.startGame();
         drawGame(); // initial draw after game engine is ready
+        
+        // start server monitoring if external player mode is enabled
+        if (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) {
+            startServerMonitoring();
+        }
     }
 
     private void startGameLoop() {
@@ -204,14 +213,14 @@ public class GameplayScreen extends BaseScreen {
         }
 
         // draw current falling piece with smooth position
-        TetrisShape currentPiece = gameEngine.getCurrentPiece();
-        if (currentPiece != null && gameEngine.isGameRunning()) {
+        TetrisShape currentShape = gameEngine.getCurrentShape();
+        if (currentShape != null && gameEngine.isGameRunning()) {
             double smoothY = gameEngine.getSmoothY();
 
-            for (int row = 0; row < currentPiece.getHeight(); row++) {
-                for (int col = 0; col < currentPiece.getWidth(); col++) {
-                    if (currentPiece.isCellFilled(row, col)) {
-                        int boardCol = currentPiece.getX() + col;
+            for (int row = 0; row < currentShape.getHeight(); row++) {
+                for (int col = 0; col < currentShape.getWidth(); col++) {
+                    if (currentShape.isCellFilled(row, col)) {
+                        int boardCol = currentShape.getX() + col;
                         double boardRow = smoothY + row;
 
                         // only draw if within visible area
@@ -219,7 +228,7 @@ public class GameplayScreen extends BaseScreen {
                             boardRow >= 0 && boardRow < GameBoard.BOARD_HEIGHT) {
                             double x = PADDING + boardCol * CELL_SIZE;
                             double y = PADDING + boardRow * CELL_SIZE;
-                            drawCell(x, y, CELL_SIZE, currentPiece.getColor());
+                            drawCell(x, y, CELL_SIZE, currentShape.getColor());
                         }
                     }
                 }
@@ -265,7 +274,10 @@ public class GameplayScreen extends BaseScreen {
     public void setupKeyboardEvents(Scene scene) {
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.P) {
-                paused = !paused;
+                // can't unpause when server dialog is showing
+                if (!paused || !serverMonitor.isDialogShowing()) {
+                    paused = !paused;
+                }
                 return;
             }
             if (inputController != null && gameEngine != null && gameEngine.isGameRunning() && !paused && !gameEngine.isAIEnabled()) {
@@ -287,6 +299,26 @@ public class GameplayScreen extends BaseScreen {
         // ensure the scene can receive keyboard focus
         scene.getRoot().setFocusTraversable(true);
         scene.getRoot().requestFocus();
+    }
+    
+    // starts background server monitoring for external player mode
+    private void startServerMonitoring() {
+        serverMonitor.startMonitoring(
+            () -> {
+                if (paused && serverMonitor.isDialogShowing()) {
+                    paused = false;
+                    serverMonitor.hideDialog();
+                }
+            },
+            () -> {
+                if (gameEngine != null && gameEngine.isGameRunning()) {
+                    paused = true; // ensure game is paused
+                    serverMonitor.showDialog(() -> {
+                        navigateToMenu();
+                    });
+                }
+            }
+        );
     }
 
     public static Scene getScene(Runnable onBackToMenu) {

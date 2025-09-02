@@ -20,6 +20,18 @@ public class GameBoard {
         }
     }
     
+    // sets board state directly from String array (for server use)
+    public void setBoardState(String[][] cells) {
+        clearBoard();
+        if (cells != null) {
+            for (int row = 0; row < cells.length && row < BOARD_HEIGHT; row++) {
+                for (int col = 0; col < cells[row].length && col < BOARD_WIDTH; col++) {
+                    board[row][col] = cells[row][col];
+                }
+            }
+        }
+    }
+    
     public boolean isValidPosition(TetrisShape shape, int newX, int newY) {
         for (int row = 0; row < shape.getHeight(); row++) {
             for (int col = 0; col < shape.getWidth(); col++) {
@@ -27,12 +39,12 @@ public class GameBoard {
                     int boardX = newX + col; // translate to board coordinates
                     int boardY = newY + row;
                     
-                    // Allow pieces above the game area (negative Y), but check bounds for visible area
+                    // lllow pieces above the game area (negative Y), but check bounds for visible area
                     if (boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT) {
                         return false;
                     }
                     
-                    // Only check collision if the cell is within the visible game area
+                    // only check collision if the cell is within the visible game area
                     if (boardY >= 0 && board[boardY][boardX] != null) {
                         return false;
                     }
@@ -57,8 +69,7 @@ public class GameBoard {
             }
         }
     }
-    
-    
+
     public String getCellColor(int row, int col) {
         if (row >= 0 && row < BOARD_HEIGHT && col >= 0 && col < BOARD_WIDTH) {
             return board[row][col];

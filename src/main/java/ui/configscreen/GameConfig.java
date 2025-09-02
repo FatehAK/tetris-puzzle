@@ -1,6 +1,6 @@
 package ui.configscreen;
 
-// holds game configuration settings that can be shared between screens
+// Holds game configuration settings that can be shared between screens
 public class GameConfig {
     
     public enum PlayerType {
