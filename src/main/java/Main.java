@@ -1,15 +1,19 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import ui.splashscreen.SplashScreen;
 import ui.menuscreen.MenuScreen;
 import ui.gameplayscreen.GameplayScreen;
 import ui.configscreen.ConfigScreen;
+import ui.configscreen.GameConfig;
 import ui.highscorescreen.HighScoreScreen;
+import util.ServerMonitor;
 
 // Main application entry point that launches the Tetris game
 public class Main extends Application {
     private Stage primaryStage;
+    private final ServerMonitor serverMonitor = new ServerMonitor();
 
     public static void main(String[] args) {
         launch(args);
@@ -42,8 +46,29 @@ public class Main extends Application {
     }
 
     private void showGameplayScreen() {
+        GameConfig config = GameConfig.getInstance();
+        
+        // check if player 1 is set to external and server is required
+        if (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) {
+            if (!serverMonitor.isServerRunning()) {
+                // show reconnection dialog and start checking
+                serverMonitor.showDialog();
+                startServerCheckingForPlay();
+                return; // stay on menu screen until server is available
+            }
+        }
+        
         Scene gameplayScene = GameplayScreen.getScene(this::showMenuScreen);
         primaryStage.setScene(gameplayScene);
+    }
+    
+    // starts background server checking when trying to play with external mode
+    private void startServerCheckingForPlay() {
+        serverMonitor.startMonitoring(() -> {
+            // server is back - hide dialog and start game
+            serverMonitor.hideDialog();
+            showGameplayScreen();
+        });
     }
 
     private void showConfigScreen() {

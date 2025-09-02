@@ -1,11 +1,16 @@
 package model;
 
 import java.util.Random;
+import java.io.*;
+import java.net.*;
+import com.google.gson.Gson;
+import ui.configscreen.GameConfig;
 
 // Controls the game logic and piece movement
 public class GameEngine implements InputController {
     private GameBoard board;
-    private TetrisShape currentPiece;
+    private TetrisShape currentShape;
+    private TetrisShape.ShapeType nextShapeType;
     private Random random;
     private boolean gameRunning;
     private long lastDropTime = 0;
@@ -20,17 +25,29 @@ public class GameEngine implements InputController {
     private TetrisAI.Move pendingAIMove = null;
     private int aiRotationsCompleted = 0;
     
+    // External player mode fields
+    private boolean externalPlayerMode = false;
+    private OpMove pendingExternalMove = null;
+    private int externalRotationsCompleted = 0;
+    private Gson gson;
+    
     public GameEngine() {
         board = new GameBoard();
         random = new Random();
         gameRunning = false;
         tetrisAI = new TetrisAI();
+        gson = new Gson();
+        
+        // check if player 1 is set to external mode
+        GameConfig config = GameConfig.getInstance();
+        externalPlayerMode = (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL);
     }
     
     public void startGame() {
         gameRunning = true;
         board.clearBoard();
         lastDropTime = System.nanoTime(); // initialize timing to prevent immediate drop
+        nextShapeType = null; // reset next shape to trigger random first piece
         spawnNewPiece();
     }
     
@@ -46,8 +63,20 @@ public class GameEngine implements InputController {
         return board;
     }
     
-    public TetrisShape getCurrentPiece() {
-        return currentPiece;
+    public TetrisShape getCurrentShape() {
+        return currentShape;
+    }
+    
+    public TetrisShape.ShapeType getNextShapeType() {
+        return nextShapeType;
+    }
+    
+    // creates a preview shape from the next shape type
+    public TetrisShape getNextShape() {
+        if (nextShapeType == null) {
+            return null;
+        }
+        return new TetrisShape(nextShapeType, 0, 0);
     }
     
     // AI mode controls
@@ -61,29 +90,47 @@ public class GameEngine implements InputController {
     }
     
     public void spawnNewPiece() {
+        TetrisShape.ShapeType shapeType;
+        
+        if (nextShapeType == null) {
+            // first piece - generate random
+            TetrisShape.ShapeType[] types = TetrisShape.ShapeType.values();
+            shapeType = types[random.nextInt(types.length)];
+        } else {
+            // use the next shape
+            shapeType = nextShapeType;
+        }
+        
+        // generate new next shape
         TetrisShape.ShapeType[] types = TetrisShape.ShapeType.values();
-        TetrisShape.ShapeType randomType = types[random.nextInt(types.length)]; // pick random shape
+        nextShapeType = types[random.nextInt(types.length)];
         
         // create piece centered horizontally, start above the game area for proper spawning
-        int startX = (GameBoard.BOARD_WIDTH - TetrisShape.getWidthForType(randomType)) / 2; // center horizontally
+        int startX = (GameBoard.BOARD_WIDTH - TetrisShape.getWidthForType(shapeType)) / 2; // center horizontally
         int startY = -1; // start above the visible game area to allow proper entry
-        currentPiece = new TetrisShape(randomType, startX, startY);
+        currentShape = new TetrisShape(shapeType, startX, startY);
         smoothY = startY; // initialize smooth position
         
         // check game over - piece can't be placed at spawn position
-        if (!board.isValidPosition(currentPiece, startX, startY)) {
+        if (!board.isValidPosition(currentShape, startX, startY)) {
             stopGame(); // game over - can't spawn new piece at all
         }
         
         // calculate AI move for new piece if AI is enabled
-        if (aiEnabled && currentPiece != null) {
-            pendingAIMove = tetrisAI.findBestMove(board, currentPiece);
+        if (aiEnabled && currentShape != null) {
+            pendingAIMove = tetrisAI.findBestMove(board, currentShape);
             aiRotationsCompleted = 0; // reset rotation counter for new piece
+        }
+        
+        // get move from external server if external player mode is enabled
+        if (externalPlayerMode && currentShape != null) {
+            pendingExternalMove = requestMoveFromServer();
+            externalRotationsCompleted = 0; // reset rotation counter for new piece
         }
     }
     
     public boolean movePieceDown() {
-        if (currentPiece == null || !gameRunning) {
+        if (currentShape == null || !gameRunning) {
             return false;
         }
         
@@ -91,7 +138,7 @@ public class GameEngine implements InputController {
             return true;
         } else {
             // can't move down - place piece and spawn new one
-            board.placePiece(currentPiece);
+            board.placePiece(currentShape);
             board.clearFullRows();
             spawnNewPiece();
             return false;
@@ -99,16 +146,16 @@ public class GameEngine implements InputController {
     }
     
     public boolean movePiece(int deltaX, int deltaY) {
-        if (currentPiece == null || !gameRunning) {
+        if (currentShape == null || !gameRunning) {
             return false;
         }
         
-        int newX = currentPiece.getX() + deltaX;
-        int newY = currentPiece.getY() + deltaY;
+        int newX = currentShape.getX() + deltaX;
+        int newY = currentShape.getY() + deltaY;
         
-        if (board.isValidPosition(currentPiece, newX, newY)) {
-            currentPiece.setX(newX);
-            currentPiece.setY(newY);
+        if (board.isValidPosition(currentShape, newX, newY)) {
+            currentShape.setX(newX);
+            currentShape.setY(newY);
             smoothY = newY; // update smooth position when piece moves
             return true;
         }
@@ -145,7 +192,7 @@ public class GameEngine implements InputController {
     }
     
     public boolean rotatePiece() {
-        if (currentPiece == null || !gameRunning) {
+        if (currentShape == null || !gameRunning) {
             return false;
         }
         
@@ -160,7 +207,7 @@ public class GameEngine implements InputController {
         }
         
         // additional wall kick for I-piece (try moving 2 positions)
-        if (currentPiece.getType() == TetrisShape.ShapeType.I) {
+        if (currentShape.getType() == TetrisShape.ShapeType.I) {
             if (tryRotation(-2, 0) || tryRotation(2, 0)) {
                 return true;
             }
@@ -170,11 +217,11 @@ public class GameEngine implements InputController {
     }
     
     private boolean tryRotation(int deltaX, int deltaY) {
-        int newX = currentPiece.getX() + deltaX;
-        int newY = currentPiece.getY() + deltaY;
+        int newX = currentShape.getX() + deltaX;
+        int newY = currentShape.getY() + deltaY;
         
         // test rotation without creating new objects
-        boolean[][] rotatedPattern = currentPiece.getRotatedPattern();
+        boolean[][] rotatedPattern = currentShape.getRotatedPattern();
         
         // check if rotated pattern fits at new position
         for (int row = 0; row < rotatedPattern.length; row++) {
@@ -195,33 +242,38 @@ public class GameEngine implements InputController {
         }
         
         // rotation is valid - apply it
-        currentPiece.rotate();
-        currentPiece.setX(newX);
-        currentPiece.setY(newY);
+        currentShape.rotate();
+        currentShape.setX(newX);
+        currentShape.setY(newY);
         return true;
     }
     
     public boolean updateGame(long currentTime) {
-        if (!gameRunning || currentPiece == null) {
+        if (!gameRunning || currentShape == null) {
             return false;
         }
         
         // execute AI move if enabled and piece is in visible area
-        if (aiEnabled && pendingAIMove != null && currentPiece.getY() >= 0) {
+        if (aiEnabled && pendingAIMove != null && currentShape.getY() >= 0) {
             executeNextAIAction();
         }
         
-        // choose drop interval based on fast drop setting or AI mode
-        long dropInterval = (fastDropEnabled || aiEnabled) ? FAST_DROP_INTERVAL : DROP_INTERVAL;
+        // execute external move if enabled and piece is in visible area
+        if (externalPlayerMode && pendingExternalMove != null && currentShape.getY() >= 0) {
+            executeNextExternalAction();
+        }
+        
+        // choose drop interval based on fast drop setting, AI mode, or external player mode
+        long dropInterval = (fastDropEnabled || aiEnabled || externalPlayerMode) ? FAST_DROP_INTERVAL : DROP_INTERVAL;
         
         // smooth falling animation
         double deltaTime = (currentTime - lastDropTime) / (double) dropInterval;
         
         // update smooth position based on movement capability
-        if (board.isValidPosition(currentPiece, currentPiece.getX(), currentPiece.getY() + 1)) {
-            smoothY = currentPiece.getY() + Math.min(deltaTime, 1.0);
+        if (board.isValidPosition(currentShape, currentShape.getX(), currentShape.getY() + 1)) {
+            smoothY = currentShape.getY() + Math.min(deltaTime, 1.0);
         } else {
-            smoothY = currentPiece.getY();
+            smoothY = currentShape.getY();
         }
         
         // check if enough time has passed for next drop
@@ -239,7 +291,7 @@ public class GameEngine implements InputController {
     
     // execute one AI action at a time with delay
     private void executeNextAIAction() {
-        if (pendingAIMove == null || currentPiece == null) {
+        if (pendingAIMove == null || currentShape == null) {
             return;
         }
         
@@ -247,13 +299,42 @@ public class GameEngine implements InputController {
         if (aiRotationsCompleted < pendingAIMove.rotations()) {
             rotatePiece();
             aiRotationsCompleted++;
-        } else if (currentPiece.getX() < pendingAIMove.column()) {
+        } else if (currentShape.getX() < pendingAIMove.column()) {
             movePieceRight();
-        } else if (currentPiece.getX() > pendingAIMove.column()) {
+        } else if (currentShape.getX() > pendingAIMove.column()) {
             movePieceLeft();
         } else {
             // finally, clear the pending move
             pendingAIMove = null;
+            return; // no delay needed when clearing move
+        }
+        
+        // add delay after any action
+        try {
+            Thread.sleep(50); // 50ms delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+    
+    // executes the next action from external server move
+    private void executeNextExternalAction() {
+        if (pendingExternalMove == null || currentShape == null) {
+            return;
+        }
+        
+        
+        // first, handle rotations
+        if (externalRotationsCompleted < pendingExternalMove.opRotate()) {
+            rotatePiece();
+            externalRotationsCompleted++;
+        } else if (currentShape.getX() < pendingExternalMove.opX()) {
+            movePieceRight();
+        } else if (currentShape.getX() > pendingExternalMove.opX()) {
+            movePieceLeft();
+        } else {
+            // finally, clear the pending move
+            pendingExternalMove = null;
             return; // no delay needed when clearing move
         }
         
@@ -271,5 +352,72 @@ public class GameEngine implements InputController {
     
     public boolean isFastDropEnabled() {
         return fastDropEnabled;
+    }
+    
+    
+    // requests optimal move from external TetrisServer - fails fast, no blocking
+    private OpMove requestMoveFromServer() {
+        try {
+            PureGame pureGame = createPureGameFromCurrentState();
+            
+            try (Socket socket = new Socket("localhost", 3000);
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                
+                String requestJson = gson.toJson(pureGame);
+                out.println(requestJson);
+                
+                String responseJson = in.readLine();
+                if (responseJson != null) {
+                    return gson.fromJson(responseJson, OpMove.class);
+                }
+            }
+        } catch (IOException e) {
+            // server connection failed - UI handles reconnection
+        }
+        
+        return new OpMove(0, 0); // default safe move
+    }
+    
+    
+    // creates PureGame object from current game state
+    private PureGame createPureGameFromCurrentState() {
+        // get current board state as String[][]
+        String[][] cells = new String[GameBoard.BOARD_HEIGHT][GameBoard.BOARD_WIDTH];
+        for (int row = 0; row < GameBoard.BOARD_HEIGHT; row++) {
+            for (int col = 0; col < GameBoard.BOARD_WIDTH; col++) {
+                cells[row][col] = board.getCellColor(row, col);
+            }
+        }
+        
+        // get current shape pattern
+        boolean[][] currentShapePattern = null;
+        if (currentShape != null) {
+            currentShapePattern = new boolean[currentShape.getHeight()][currentShape.getWidth()];
+            for (int row = 0; row < currentShape.getHeight(); row++) {
+                for (int col = 0; col < currentShape.getWidth(); col++) {
+                    currentShapePattern[row][col] = currentShape.isCellFilled(row, col);
+                }
+            }
+        }
+        
+        // get next shape pattern
+        boolean[][] nextShapePattern = null;
+        TetrisShape nextShape = getNextShape();
+        if (nextShape != null) {
+            nextShapePattern = new boolean[nextShape.getHeight()][nextShape.getWidth()];
+            for (int row = 0; row < nextShape.getHeight(); row++) {
+                for (int col = 0; col < nextShape.getWidth(); col++) {
+                    nextShapePattern[row][col] = nextShape.isCellFilled(row, col);
+                }
+            }
+        }
+        
+        int shapeX = currentShape != null ? currentShape.getX() : 0;
+        int shapeY = currentShape != null ? currentShape.getY() : 0;
+        String shapeType = currentShape != null ? currentShape.getType().name() : "T";
+        
+        return new PureGame(GameBoard.BOARD_WIDTH, GameBoard.BOARD_HEIGHT, 
+                           cells, currentShapePattern, nextShapePattern, shapeX, shapeY, shapeType);
     }
 }

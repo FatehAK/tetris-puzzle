@@ -13,14 +13,12 @@ public class TetrisAI {
         Move bestMove = null;
         int bestScore = Integer.MIN_VALUE;
         
-        // try each rotation state (optimized for different piece types)
         int maxRotations = getMaxRotationsForPiece(piece.getType());
         
         for (int rotation = 0; rotation < maxRotations; rotation++) {
             // create test piece for this rotation
             TetrisShape testPiece = createTestPiece(piece, rotation);
             
-            // try each column position
             for (int col = 0; col < GameBoard.BOARD_WIDTH; col++) {
                 // check if piece can fit in this column
                 if (canFitInColumn(board, testPiece, col)) {
@@ -161,8 +159,6 @@ public class TetrisAI {
                 
                 // clear top row
                 Arrays.fill(board[0], null);
-                
-                // stay on same row to re-check after shift
             } else {
                 row++; // only move to next row if no row was cleared
             }

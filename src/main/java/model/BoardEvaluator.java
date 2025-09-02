@@ -1,6 +1,6 @@
 package model;
 
-// evaluates board states for AI decision making using height, holes, lines cleared and bumpiness
+// Evaluates board states for AI decision making using height, holes, lines cleared and bumpiness
 public class BoardEvaluator {
     
     public int evaluateBoard(String[][] board) {
@@ -9,7 +9,6 @@ public class BoardEvaluator {
         int linesCleared = getClearedLines(board);
         int bumpinessScore = getBumpiness(board);
         
-        // weights based on tutorial - prioritize clearing lines and avoiding holes
         return (-4 * heightScore) + (3 * linesCleared) - (5 * holesScore) - (2 * bumpinessScore);
     }
     

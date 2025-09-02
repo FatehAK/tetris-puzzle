@@ -17,15 +17,15 @@ public class TetrisShape {
     public TetrisShape(ShapeType type, int x, int y) {
         this.type = type;
         this.pattern = createPattern(type);
-        this.color = switch (type) {
-            case I -> "cyan";
-            case O -> "yellow";
-            case T -> "purple";
-            case L -> "orange";
-            case J -> "blue";
-            case Z -> "green";
-            case S -> "red";
-        };
+        this.color = getColorForType(type);
+        this.position = new Point(x, y);
+    }
+    
+    // constructor for server use with shape type
+    public TetrisShape(ShapeType type, boolean[][] customPattern, int x, int y) {
+        this.type = type;
+        this.pattern = (customPattern != null && customPattern.length > 0) ? customPattern : createPattern(type);
+        this.color = getColorForType(type);
         this.position = new Point(x, y);
     }
     
@@ -151,6 +151,19 @@ public class TetrisShape {
                 {false, true, true},
                 {true, true, false}
             };
+        };
+    }
+    
+    // utility method to get color for shape type
+    private static String getColorForType(ShapeType type) {
+        return switch (type) {
+            case I -> "cyan";
+            case O -> "yellow";
+            case T -> "purple";
+            case L -> "orange";
+            case J -> "blue";
+            case Z -> "green";
+            case S -> "red";
         };
     }
 }
