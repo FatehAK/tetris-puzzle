@@ -13,8 +13,13 @@
       spacing="20"
       stylesheets="@gameplay.css">
     
-    <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
+    <!-- Dynamic container for single/two-player layouts -->
+    <VBox fx:id="gameContainer" alignment="CENTER" spacing="20">
+        <!-- Default single-player canvas (replaced in two-player mode) -->
+        <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
+    </VBox>
     
+
     <Button fx:id="backButton" text="Back to Menu" styleClass="game-button-small"/>
     
 </VBox>
