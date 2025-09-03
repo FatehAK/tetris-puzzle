@@ -2,12 +2,9 @@ package ui.configscreen;
 
 // Holds game configuration settings that can be shared between screens
 public class GameConfig {
-    
     public enum PlayerType {
         HUMAN, AI, EXTERNAL
     }
-    
-    private static GameConfig instance = null;
     
     // configuration settings
     private PlayerType player1Type = PlayerType.HUMAN;
@@ -20,12 +17,14 @@ public class GameConfig {
     private int gameLevel = 1;
     
     private GameConfig() {}
+
+    // thread-safe singleton pattern
+    private static class InstanceHolder {
+        private static final GameConfig INSTANCE = new GameConfig();
+    }
     
     public static GameConfig getInstance() {
-        if (instance == null) {
-            instance = new GameConfig();
-        }
-        return instance;
+        return InstanceHolder.INSTANCE;
     }
     
     // player type settings
