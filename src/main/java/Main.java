@@ -47,8 +47,9 @@ public class Main extends Application {
     private void showGameplayScreen() {
         GameConfig config = GameConfig.getInstance();
         
-        // check if player 1 is set to external and server is required
-        if (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) {
+        // check if any player is set to external and server is required
+        if (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL || 
+            config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL) {
             if (!serverMonitor.isServerRunning()) {
                 // show reconnection dialog and start checking
                 serverMonitor.showDialog();

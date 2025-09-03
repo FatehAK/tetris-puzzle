@@ -4,7 +4,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import ui.BaseScreen;
 
-// csontroller for the configuration screen where users can set game options
+// Controller for the configuration screen where users can set game options
 public class ConfigScreen extends BaseScreen {
     // FXML injected UI components
     @FXML private Slider widthSlider;
@@ -153,6 +153,12 @@ public class ConfigScreen extends BaseScreen {
             extendStatus.setText(selected ? "On" : "Off");
             gameConfig.setExtendedMode(selected);
             updatePlayerTwoRadioButtons(selected);
+            
+            // default Player 2 to HUMAN when extended mode is enabled
+            if (selected) {
+                gameConfig.setPlayer2Type(GameConfig.PlayerType.HUMAN);
+                playerTwoHuman.setSelected(true);
+            }
         });
     }
     
