@@ -101,3 +101,47 @@
     -fx-background-color: #5ba0f2;
     -fx-cursor: hand;
 }
+
+.score-header > VBox {
+    -fx-min-width: 60px;
+    -fx-max-width: 60px;
+    -fx-alignment: center;
+}
+
+.score-header > VBox:nth-child(2) {
+    -fx-min-width: 180px;
+    -fx-max-width: 180px;
+    -fx-alignment: center-left;
+}
+
+.score-header > VBox:nth-child(3),
+.score-header > VBox:nth-child(4) {
+    -fx-min-width: 110px;
+    -fx-max-width: 110px;
+    -fx-alignment: center;
+}
+
+.score-row .score-rank {
+    -fx-min-width: 60px;
+    -fx-max-width: 60px;
+    -fx-alignment: center;
+}
+
+.score-row .score-name {
+    -fx-min-width: 180px;
+    -fx-max-width: 180px;
+    -fx-alignment: center-left;
+}
+
+.score-row .score-points,
+.score-row .score-date {
+    -fx-min-width: 110px;
+    -fx-max-width: 110px;
+    -fx-alignment: center;
+}
+
+.score-row Label {
+    -fx-padding: 2 10 2 10;
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+}
