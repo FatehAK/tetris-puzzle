@@ -1,14 +1,16 @@
 package model;
 
+import java.time.LocalDate;
+
 public class HighScore {
     private String playerName;
     private int score;
-
-    public HighScore() { }
+    private LocalDate date;
 
     public HighScore(String playerName, int score) {
         this.playerName = playerName;
         this.score = score;
+        this.date = LocalDate.now();
     }
 
     public String getPlayerName() { return playerName; }
@@ -16,6 +18,14 @@ public class HighScore {
 
     public int getScore() { return score; }
     public void setScore(int score) { this.score = score; }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
 
     @Override
     public String toString() {
