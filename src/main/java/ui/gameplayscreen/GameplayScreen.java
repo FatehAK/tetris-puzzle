@@ -200,8 +200,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
 
             // Show high score screen with callback
             Scene highScoreScene = HighScoreScreen.getScene(() -> {
-                restartGame();
-                // Or navigateToMenu();
+                navigateToMenu();
             });
 
             Platform.runLater(() -> {
