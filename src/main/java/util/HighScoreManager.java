@@ -2,6 +2,8 @@ package util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import model.HighScore;
 
 import java.io.File;
@@ -21,6 +23,8 @@ public class HighScoreManager {
     // Private constructor to enforce singleton
     private HighScoreManager() {
         mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         scores = new ArrayList<>();
         loadScores();
     }
@@ -40,6 +44,7 @@ public class HighScoreManager {
             try {
                 scores = mapper.readValue(file, new TypeReference<List<HighScore>>() {});
             } catch (IOException e) {
+                System.err.println("Failed to load scores from JSON, resetting scores list.");
                 e.printStackTrace();
                 scores = new ArrayList<>();
             }

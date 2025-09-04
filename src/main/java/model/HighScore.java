@@ -7,6 +7,10 @@ public class HighScore {
     private int score;
     private LocalDate date;
 
+    // No-arg constructor required by Jackson
+    public HighScore() {
+    }
+
     public HighScore(String playerName, int score) {
         this.playerName = playerName;
         this.score = score;
