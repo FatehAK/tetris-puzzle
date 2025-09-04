@@ -14,6 +14,7 @@ import java.util.List;
 public class HighScoreManager {
 
     private static final String FILE_PATH = "highscores.json";
+    private static final int MAX_HIGH_SCORES = 10;
 
     private static HighScoreManager instance;
 
@@ -44,7 +45,7 @@ public class HighScoreManager {
             try {
                 scores = mapper.readValue(file, new TypeReference<List<HighScore>>() {});
             } catch (IOException e) {
-                System.err.println("Failed to load scores from JSON, resetting scores list.");
+                System.err.println("Failed to load scores from JSON file '" + FILE_PATH + "'. Possible causes: file not found, file corruption, or invalid format. Resetting scores list.");
                 e.printStackTrace();
                 scores = new ArrayList<>();
             }
@@ -73,8 +74,8 @@ public class HighScoreManager {
         // Sort descending
         scores.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
         // Trim to top 10
-        if (scores.size() > 10) {
-            scores = scores.subList(0, 10);
+        if (scores.size() > MAX_HIGH_SCORES) {
+            scores = scores.subList(0, MAX_HIGH_SCORES);
         }
         saveScores();
     }
