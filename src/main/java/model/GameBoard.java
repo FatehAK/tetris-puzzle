@@ -84,7 +84,9 @@ public class GameBoard {
      * Multiple full lines can be cleared in a single call, and the shifting is repeated as needed.
      * This method modifies the board in place.
      */
-    public void clearFullRows() {
+    public int clearFullRows() {
+        int rowsCleared = 0;
+
         for (int row = 0; row < BOARD_HEIGHT; ) {
             boolean fullRow = true;
 
@@ -96,6 +98,8 @@ public class GameBoard {
             }
 
             if (fullRow) {
+                rowsCleared++;
+
                 // shift all rows above down by one
                 for (int y = row; y > 0; y--) {
                     System.arraycopy(board[y - 1], 0, board[y], 0, BOARD_WIDTH);
@@ -111,5 +115,6 @@ public class GameBoard {
                 row++; // only move to the next row if no row was cleared
             }
         }
+        return rowsCleared;
     }
 }

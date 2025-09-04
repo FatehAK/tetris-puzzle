@@ -16,19 +16,25 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 import model.GameBoard;
 import model.GameEngine;
+import model.HighScore;
 import model.TetrisShape;
 import ui.BaseScreen;
 import ui.GameOverDialog;
+import ui.highscorescreen.HighScoreScreen;
+import util.HighScoreManager;
 import util.ShapeColors;
 import util.ServerMonitor;
 import ui.configscreen.GameConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Optional;
 
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen extends BaseScreen {
@@ -38,6 +44,7 @@ public class GameplayScreen extends BaseScreen {
     @FXML private Canvas gameCanvas;
     @FXML private VBox gameContainer;
     @FXML private Button backButton;
+    @FXML private Label scoreLabel;
 
     private final List<GameEngine> engines = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
@@ -148,22 +155,41 @@ public class GameplayScreen extends BaseScreen {
             firstCanvas.getScene().getRoot().requestFocus();
         }
     }
-    
-    
+
     private void handleGameOver() {
-        Canvas firstCanvas = getSafeCanvas(0);
-        if (firstCanvas == null || firstCanvas.getScene() == null) {
-            navigateToMenu(); // fallback if canvas unavailable
+        GameEngine engine = getSafeEngine(0);
+        if (engine == null) {
+            navigateToMenu();
             return;
         }
-        
-        GameOverDialog.GameOverAction action = GameOverDialog.show(firstCanvas.getScene().getWindow());
-        
-        if (action == GameOverDialog.GameOverAction.PLAY_AGAIN) {
-            restartGame();
-        } else {
+
+        int finalScore = engine.getScore();
+
+        TextInputDialog nameDialog = new TextInputDialog();
+        nameDialog.setTitle("Game Over");
+        nameDialog.setHeaderText("Enter your name for the leaderboard:");
+        Optional<String> nameResult = nameDialog.showAndWait();
+
+        nameResult.ifPresentOrElse(name -> {
+            HighScoreManager manager = HighScoreManager.getInstance();
+
+            manager.addHighScore(new HighScore(name, finalScore));
+
+            // Show high score screen with callback
+            Scene highScoreScene = HighScoreScreen.getScene(() -> {
+                restartGame();
+                // Or navigateToMenu();
+            });
+
+            Platform.runLater(() -> {
+                Stage stage = (Stage) gameCanvas.getScene().getWindow();
+                stage.setScene(highScoreScene);
+            });
+
+        }, () -> {
+            // User cancelled input, go to menu
             navigateToMenu();
-        }
+        });
     }
     
     
@@ -297,6 +323,7 @@ public class GameplayScreen extends BaseScreen {
             public void handle(long now) {
                 if (!paused) {
                     updateGames(now);
+                    updateScoreDisplay();
                 }
                 drawGames();
                 
@@ -312,7 +339,14 @@ public class GameplayScreen extends BaseScreen {
             engine.updateGame(now);
         }
     }
-    
+
+    private void updateScoreDisplay() {
+        GameEngine engine = getSafeEngine(0);
+        if (engine != null) {
+            scoreLabel.setText("Score: " + engine.getScore());
+        }
+    }
+
     private void checkGameOver() {
         if (isExtendedMode && engines.size() == 2) {
             GameEngine player1Engine = getSafeEngine(0);
