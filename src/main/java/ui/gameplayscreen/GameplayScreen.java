@@ -14,16 +14,21 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
+import javafx.stage.Stage;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import model.GameBoard;
+import model.HighScore;
 import model.GameEngine;
 import model.TetrisShape;
 import ui.BaseScreen;
 import ui.GameOverDialog;
 import util.ShapeColors;
+import ui.highscorescreen.HighScoreScreen;
+import util.HighScoreManager;
 import util.ServerMonitor;
 import util.AudioManager;
 import util.AudioObserver;
@@ -31,6 +36,8 @@ import ui.configscreen.GameConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Optional;
+
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen extends BaseScreen implements AudioObserver {
     private boolean paused = false;
@@ -40,27 +47,28 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     @FXML private VBox gameContainer;
     @FXML private Button backButton;
     @FXML private Label audioStatusLabel;
+    @FXML private Label scoreLabel;
 
     private final List<GameEngine> engines = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
     private final List<GraphicsContext> contexts = new ArrayList<>();
     private long gameSeed; // seed for synchronized sequences
-    
+
     private AnimationTimer gameLoop;
     private boolean isExtendedMode;
     private boolean serverMonitorStarted = false;
-    
+
     private GameConfig currentConfig;
-    
+
     private boolean finalResultsHandled = false;
-    
+
     // UI constants
     private static final int CELL_SIZE = 25;
     private static final int PADDING = 0;
     private static final Color BACKGROUND_COLOR = Color.web("#111111");
     private static final Color BORDER_COLOR = Color.web("#333333");
     private static final Color PAUSE_TEXT_COLOR = Color.web("#FFFFFF");
-    
+
     private Runnable onBackToMenu;
     private AudioManager audioManager;
     private final ServerMonitor serverMonitor = new ServerMonitor();
@@ -68,12 +76,12 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     public void initialize() {
         currentConfig = GameConfig.getInstance();
         isExtendedMode = currentConfig.isExtendedMode();
-        
+
         // initialize audio system
         audioManager = AudioManager.getInstance();
         audioManager.addObserver(this);
         audioManager.enterGameplayMode();
-        
+
         // initialize audio status display
         updateAudioStatusDisplay();
 
@@ -82,7 +90,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         } else {
             setupSinglePlayerMode();
         }
-        
+
         backButton.setOnAction(event -> onBackButtonClicked());
         startGameLoop();
     }
@@ -93,15 +101,15 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             navigateToMenu();
             return;
         }
-        
+
         boolean wasAlreadyPaused = paused;
-        
+
         // pause game if not already paused
         if (!paused) {
             paused = true;
             audioManager.pauseBackgroundMusic();
         }
-        
+
         // show confirmation dialog
         if (showStopGameConfirmation()) {
             // user confirmed - go to menu
@@ -116,18 +124,18 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             restoreKeyboardFocus();
         }
     }
-    
+
     private boolean showStopGameConfirmation() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, 
-                               "Are you sure to stop the current game?", 
-                               ButtonType.YES, ButtonType.NO);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "Are you sure to stop the current game?",
+                ButtonType.YES, ButtonType.NO);
         alert.setTitle("Confirm Stop Game");
         alert.setHeaderText(null);
-        
+
         ButtonType result = alert.showAndWait().orElse(ButtonType.NO);
         return result == ButtonType.YES;
     }
-    
+
     private void navigateToMenu() {
         if (gameLoop != null) {
             gameLoop.stop();
@@ -149,16 +157,16 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             System.out.println("Warning: onBackToMenu callback is null - navigation not configured");
         }
     }
-    
+
     // Safe accessor methods to prevent IndexOutOfBoundsException
     private GameEngine getSafeEngine(int index) {
         return (engines != null && index >= 0 && index < engines.size()) ? engines.get(index) : null;
     }
-    
+
     private Canvas getSafeCanvas(int index) {
         return (canvases != null && index >= 0 && index < canvases.size()) ? canvases.get(index) : null;
     }
-    
+
     private void restoreKeyboardFocus() {
         // restore focus to the game scene so keyboard controls work again
         Canvas firstCanvas = getSafeCanvas(0);
@@ -166,12 +174,11 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             firstCanvas.getScene().getRoot().requestFocus();
         }
     }
-    
-    
+
     private void handleGameOver() {
-        Canvas firstCanvas = getSafeCanvas(0);
-        if (firstCanvas == null || firstCanvas.getScene() == null) {
-            navigateToMenu(); // fallback if canvas unavailable
+        GameEngine engine = getSafeEngine(0);
+        if (engine == null) {
+            navigateToMenu();
             return;
         }
 
@@ -179,48 +186,67 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         audioManager.pauseBackgroundMusic();
         audioManager.playSoundEffect(AudioManager.SOUND_GAME_OVER);
 
-        GameOverDialog.GameOverAction action = GameOverDialog.show(firstCanvas.getScene().getWindow());
-        
-        if (action == GameOverDialog.GameOverAction.PLAY_AGAIN) {
-            restartGame();
-        } else {
+        int finalScore = engine.getScore();
+
+        TextInputDialog nameDialog = new TextInputDialog();
+        nameDialog.setTitle("Game Over");
+        nameDialog.setHeaderText("Enter your name for the leaderboard:");
+        Optional<String> nameResult = nameDialog.showAndWait();
+
+        nameResult.ifPresentOrElse(name -> {
+            HighScoreManager manager = HighScoreManager.getInstance();
+
+            manager.addHighScore(new HighScore(name, finalScore));
+
+            // Show high score screen with callback
+            Scene highScoreScene = HighScoreScreen.getScene(() -> {
+                restartGame();
+                // Or navigateToMenu();
+            });
+
+            Platform.runLater(() -> {
+                Stage stage = (Stage) gameCanvas.getScene().getWindow();
+                stage.setScene(highScoreScene);
+            });
+
+        }, () -> {
+            // User cancelled input, go to menu
             navigateToMenu();
-        }
+        });
     }
-    
-    
+
     private void restartGame() {
         // stop all current games
         for (GameEngine engine : engines) {
             engine.stopGame();
         }
-        
+
         // reset pause state, server monitor flag, and game over tracking
         paused = false;
         serverMonitorStarted = false;
         finalResultsHandled = false;
-        
+
         // resume background music (already in gameplay mode, just resume if paused)
         audioManager.resumeBackgroundMusic();
-        
+
         // create new game seed for synchronized sequences
         gameSeed = System.currentTimeMillis();
-        
+
         // restart all engines
         GameConfig config = GameConfig.getInstance();
         for (int i = 0; i < engines.size(); i++) {
-            boolean isAI = (i == 0) ? 
-                (config.getPlayer1Type() == GameConfig.PlayerType.AI) :
-                (config.getPlayer2Type() == GameConfig.PlayerType.AI);
-            boolean isExternal = (i == 0) ? 
-                (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
-                (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
+            boolean isAI = (i == 0) ?
+                    (config.getPlayer1Type() == GameConfig.PlayerType.AI) :
+                    (config.getPlayer2Type() == GameConfig.PlayerType.AI);
+            boolean isExternal = (i == 0) ?
+                    (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
+                    (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
             GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
             configureEngine();
             engines.set(i, engine);
             engine.startGame();
         }
-        
+
         // restart game loop if needed
         if (gameLoop != null) {
             gameLoop.stop();
@@ -232,39 +258,39 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         // setup single player with existing canvas
         canvases.add(gameCanvas);
         contexts.add(gameCanvas.getGraphicsContext2D());
-        
+
         // create game seed for single player mode
         gameSeed = System.currentTimeMillis();
-        
+
         // create single engine with proper configuration
         boolean isAI = (currentConfig.getPlayer1Type() == GameConfig.PlayerType.AI);
         boolean isExternal = (currentConfig.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL);
         GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
         configureEngine();
         engines.add(engine);
-        
+
         engine.startGame();
-        
+
         drawGames();
     }
-    
+
     private void setupTwoPlayerMode() {
         // remove default single canvas
         gameContainer.getChildren().remove(gameCanvas);
-        
+
         // create side-by-side layout
         HBox playerContainer = new HBox(50);
         playerContainer.setAlignment(Pos.CENTER);
-        
+
         GameConfig config = GameConfig.getInstance();
-        
+
         // create game seed for synchronized two-player sequences
         gameSeed = System.currentTimeMillis();
-        
+
         for (int i = 0; i < 2; i++) {
             VBox playerBox = new VBox(10);
             playerBox.setAlignment(Pos.CENTER);
-            
+
             String playerType = (i == 0) ? config.getPlayer1Type().toString() : config.getPlayer2Type().toString();
             HBox labelContainer = new HBox(5);
             labelContainer.setAlignment(Pos.CENTER);
@@ -273,44 +299,44 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             Label typeLabel = new Label("(" + playerType + ")");
             typeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
             labelContainer.getChildren().addAll(playerLabel, typeLabel);
-            
+
             // game canvas
             Canvas canvas = new Canvas(250, 500);
             canvas.getStyleClass().add("game-field");
-            
+
             playerBox.getChildren().addAll(labelContainer, canvas);
             playerContainer.getChildren().add(playerBox);
-            
+
             // add to collections
             canvases.add(canvas);
             contexts.add(canvas.getGraphicsContext2D());
-            
+
             // create engine with identically seeded random
-            boolean isAI = (i == 0) ? 
-                (config.getPlayer1Type() == GameConfig.PlayerType.AI) :
-                (config.getPlayer2Type() == GameConfig.PlayerType.AI);
-            boolean isExternal = (i == 0) ? 
-                (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
-                (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
+            boolean isAI = (i == 0) ?
+                    (config.getPlayer1Type() == GameConfig.PlayerType.AI) :
+                    (config.getPlayer2Type() == GameConfig.PlayerType.AI);
+            boolean isExternal = (i == 0) ?
+                    (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
+                    (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
             GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
             configureEngine(); // now just handles server monitoring
             engines.add(engine);
-            
+
             engine.startGame();
         }
-        
+
         gameContainer.getChildren().add(playerContainer);
-        
+
         drawGames();
     }
-    
+
     private void configureEngine() {
         GameConfig config = GameConfig.getInstance();
-        
+
         // start server monitoring if ANY player is external
         if ((config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL ||
-             config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL) && 
-            !serverMonitorStarted) {
+                config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL) &&
+                !serverMonitorStarted) {
             startServerMonitoring();
             serverMonitorStarted = true;
         }
@@ -322,32 +348,40 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             public void handle(long now) {
                 if (!paused) {
                     updateGames(now);
+                    updateScoreDisplay();
                 }
                 drawGames();
-                
+
                 // check for game over
                 checkGameOver();
             }
         };
         gameLoop.start();
     }
-    
+
     private void updateGames(long now) {
         for (GameEngine engine : engines) {
             engine.updateGame(now);
         }
     }
-    
+
+    private void updateScoreDisplay() {
+        GameEngine engine = getSafeEngine(0);
+        if (engine != null) {
+            scoreLabel.setText("Score: " + engine.getScore());
+        }
+    }
+
     private void checkGameOver() {
         if (isExtendedMode && engines.size() == 2) {
             GameEngine player1Engine = getSafeEngine(0);
             GameEngine player2Engine = getSafeEngine(1);
-            
+
             if (player1Engine == null || player2Engine == null) return;
-            
+
             boolean player1Running = player1Engine.isGameRunning();
             boolean player2Running = player2Engine.isGameRunning();
-            
+
             // only stop when both players are done and not already handled
             if (!player1Running && !player2Running && !finalResultsHandled) {
                 finalResultsHandled = true;
@@ -369,7 +403,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             drawGame(engines.get(i), contexts.get(i), canvases.get(i));
         }
     }
-    
+
     private void drawGame(GameEngine engine, GraphicsContext gc, Canvas canvas) {
         // clear canvas with background color
         gc.setFill(BACKGROUND_COLOR);
@@ -411,7 +445,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
 
                         // only draw if within visible area
                         if (boardCol >= 0 && boardCol < GameBoard.BOARD_WIDTH &&
-                            boardRow >= 0 && boardRow < GameBoard.BOARD_HEIGHT) {
+                                boardRow >= 0 && boardRow < GameBoard.BOARD_HEIGHT) {
                             double x = PADDING + boardCol * CELL_SIZE;
                             double y = PADDING + boardRow * CELL_SIZE;
                             drawCell(gc, x, y, CELL_SIZE, currentShape.getColor());
@@ -420,12 +454,12 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                 }
             }
         }
-        
+
         // draw pause overlay if game is paused
         if (paused) {
             drawPauseOverlay(gc, canvas);
         }
-        
+
         // draw game over overlay if this player's game is over
         if (isExtendedMode && !engine.isGameRunning()) {
             drawGameOverOverlay(gc, canvas);
@@ -440,34 +474,34 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         gc.setLineWidth(1);
         gc.strokeRect(x, y, size, size);
     }
-    
+
     private void drawPauseOverlay(GraphicsContext gc, Canvas canvas) {
         gc.setFill(Color.rgb(0, 0, 0, 0.3));
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        
+
         // pause text
         gc.setFill(PAUSE_TEXT_COLOR);
         gc.setFont(Font.font("Arial", 15));
         gc.setTextAlign(TextAlignment.CENTER);
-        
+
         double textX = canvas.getWidth() / 2;
         double textY = 50;
-        
+
         gc.fillText("Game is paused.", textX, textY);
         gc.fillText("Press P to continue.", textX, textY + 20);
     }
-    
+
     private void drawGameOverOverlay(GraphicsContext gc, Canvas canvas) {
         gc.setFill(Color.rgb(0, 0, 0, 0.7));
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        
+
         gc.setFill(Color.web("#FF6B6B"));
         gc.setFont(Font.font("Arial", 20));
         gc.setTextAlign(TextAlignment.CENTER);
-        
+
         double textX = canvas.getWidth() / 2;
         double textY = canvas.getHeight() / 2;
-        
+
         gc.fillText("GAME OVER", textX, textY);
     }
 
@@ -480,7 +514,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         scene.getRoot().setFocusTraversable(true);
         scene.getRoot().requestFocus();
     }
-    
+
     private void handleKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.P) {
             if (!paused || !serverMonitor.isDialogShowing()) {
@@ -494,30 +528,30 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             }
             return;
         }
-        
+
         // Audio toggles
         if (event.getCode() == KeyCode.M) {
             currentConfig.setMusicEnabled(!currentConfig.isMusicEnabled());
             return;
         }
-        
+
         if (event.getCode() == KeyCode.S) {
             currentConfig.setSoundEnabled(!currentConfig.isSoundEnabled());
             return;
         }
-        
+
         if (paused) return;
-        
+
         if (isExtendedMode) {
             handleTwoPlayerInput(event);
         } else {
             handleSinglePlayerInput(event);
         }
     }
-    
+
     private void handleKeyReleased(KeyEvent event) {
         if (paused) return;
-        
+
         if (isExtendedMode) {
             // player 1 fast drop release (S key)
             if (event.getCode() == KeyCode.S && currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
@@ -526,7 +560,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                     engine.setFastDrop(false);
                 }
             }
-            
+
             // player 2 fast drop release (DOWN key)
             if (event.getCode() == KeyCode.DOWN && currentConfig.getPlayer2Type() == GameConfig.PlayerType.HUMAN) {
                 GameEngine engine = getSafeEngine(1);
@@ -544,15 +578,15 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             }
         }
     }
-    
+
     private void handleSinglePlayerInput(KeyEvent event) {
         GameEngine engine = getSafeEngine(0);
-        
+
         // only allow keyboard input for HUMAN players
         if (engine == null || !engine.isGameRunning() || currentConfig.getPlayer1Type() != GameConfig.PlayerType.HUMAN) {
             return;
         }
-        
+
         switch (event.getCode()) {
             case LEFT -> engine.moveLeft();
             case RIGHT -> engine.moveRight();
@@ -560,7 +594,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             case UP -> engine.rotate();
         }
     }
-    
+
     private void handleTwoPlayerInput(KeyEvent event) {
         // player 1 controls (WASD) - ONLY for HUMAN players
         if (currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
@@ -574,7 +608,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                 }
             }
         }
-        
+
         // player 2 controls (Arrow keys) - ONLY for HUMAN players
         if (currentConfig.getPlayer2Type() == GameConfig.PlayerType.HUMAN) {
             GameEngine p2Engine = getSafeEngine(1);
@@ -588,36 +622,36 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             }
         }
     }
-    
+
     // starts background server monitoring for external player mode
     private void startServerMonitoring() {
         serverMonitor.startMonitoring(
-            () -> {
-                if (paused && serverMonitor.isDialogShowing()) {
-                    paused = false;
-                    audioManager.resumeBackgroundMusic();
-                    serverMonitor.hideDialog();
+                () -> {
+                    if (paused && serverMonitor.isDialogShowing()) {
+                        paused = false;
+                        audioManager.resumeBackgroundMusic();
+                        serverMonitor.hideDialog();
+                    }
+                },
+                () -> {
+                    // check if any game is running before showing server dialog
+                    if (engines.stream().anyMatch(GameEngine::isGameRunning)) {
+                        paused = true; // ensure game is paused
+                        audioManager.pauseBackgroundMusic();
+                        serverMonitor.showDialog(() -> {
+                            navigateToMenu();
+                        });
+                    }
                 }
-            },
-            () -> {
-                // check if any game is running before showing server dialog
-                if (engines.stream().anyMatch(GameEngine::isGameRunning)) {
-                    paused = true; // ensure game is paused
-                    audioManager.pauseBackgroundMusic();
-                    serverMonitor.showDialog(() -> {
-                        navigateToMenu();
-                    });
-                }
-            }
         );
     }
-    
+
     // AudioObserver implementation
     @Override
     public void onMusicSettingChanged(boolean enabled) {
         updateAudioStatusDisplay();
     }
-    
+
     @Override
     public void onSoundSettingChanged(boolean enabled) {
         updateAudioStatusDisplay();
@@ -633,14 +667,14 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
 
     public static Scene getScene(Runnable onBackToMenu) {
         GameConfig config = GameConfig.getInstance();
-        
+
         // dynamic window sizing based on mode
         int width = config.isExtendedMode() ? 700 : 400;
         int height = config.isExtendedMode() ? 660 : 630;
-        
+
         LoadResult<GameplayScreen> result = loadSceneWithController(
-            GameplayScreen.class, "gameplay.fxml", width, height);
-        
+                GameplayScreen.class, "gameplay.fxml", width, height);
+
         result.controller().onBackToMenu = onBackToMenu;
         result.controller().setupKeyboardEvents(result.scene());
         return result.scene();

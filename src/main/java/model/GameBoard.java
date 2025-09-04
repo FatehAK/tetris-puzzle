@@ -4,14 +4,14 @@ import util.AudioManager;
 public class GameBoard {
     public static final int BOARD_WIDTH = 10;
     public static final int BOARD_HEIGHT = 20;
-    
+
     private String[][] board;
-    
+
     public GameBoard() {
         board = new String[BOARD_HEIGHT][BOARD_WIDTH];
         clearBoard();
     }
-    
+
     public void clearBoard() {
         for (String[] row : board) {
             for (int col = 0; col < row.length; col++) {
@@ -19,7 +19,7 @@ public class GameBoard {
             }
         }
     }
-    
+
     // sets board state directly from String array (for server use)
     public void setBoardState(String[][] cells) {
         clearBoard();
@@ -31,19 +31,19 @@ public class GameBoard {
             }
         }
     }
-    
+
     public boolean isValidPosition(TetrisShape shape, int newX, int newY) {
         for (int row = 0; row < shape.getHeight(); row++) {
             for (int col = 0; col < shape.getWidth(); col++) {
                 if (shape.isCellFilled(row, col)) {
                     int boardX = newX + col; // translate to board coordinates
                     int boardY = newY + row;
-                    
+
                     // lllow pieces above the game area (negative Y), but check bounds for visible area
                     if (boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT) {
                         return false;
                     }
-                    
+
                     // only check collision if the cell is within the visible game area
                     if (boardY >= 0 && board[boardY][boardX] != null) {
                         return false;
@@ -53,16 +53,16 @@ public class GameBoard {
         }
         return true;
     }
-    
+
     public void placePiece(TetrisShape shape) {
         for (int row = 0; row < shape.getHeight(); row++) {
             for (int col = 0; col < shape.getWidth(); col++) {
                 if (shape.isCellFilled(row, col)) {
                     int boardX = shape.getX() + col;
                     int boardY = shape.getY() + row;
-                    
-                    if (boardX >= 0 && boardX < BOARD_WIDTH && 
-                        boardY >= 0 && boardY < BOARD_HEIGHT) {
+
+                    if (boardX >= 0 && boardX < BOARD_WIDTH &&
+                            boardY >= 0 && boardY < BOARD_HEIGHT) {
                         board[boardY][boardX] = shape.getColor();
                     }
                 }
@@ -84,8 +84,9 @@ public class GameBoard {
      * Multiple full lines can be cleared in a single call, and the shifting is repeated as needed.
      * This method modifies the board in place.
      */
+    public int clearFullRows() {
+        int rowsCleared = 0;
 
-    public void clearFullRows() {
         for (int row = 0; row < BOARD_HEIGHT; ) {
             boolean fullRow = true;
 
@@ -99,6 +100,7 @@ public class GameBoard {
             if (fullRow) {
                 // play line clear sound effect
                 AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_LINE_CLEAR);
+                rowsCleared++;
 
                 // shift all rows above down by one
                 for (int y = row; y > 0; y--) {
@@ -115,5 +117,6 @@ public class GameBoard {
                 row++; // only move to the next row if no row was cleared
             }
         }
+        return rowsCleared;
     }
 }

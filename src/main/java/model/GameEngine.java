@@ -31,7 +31,9 @@ public class GameEngine implements InputController {
     private OpMove pendingExternalMove = null;
     private int externalRotationsCompleted = 0;
     private Gson gson;
-    
+
+    private int currentScore = 0;
+
     public GameEngine() {
         this(new Random());
     }
@@ -62,6 +64,7 @@ public class GameEngine implements InputController {
         board.clearBoard();
         lastDropTime = System.nanoTime(); // initialize timing to prevent immediate drop
         nextShapeType = null; // reset next shape to trigger random first piece
+        currentScore = 0;
         spawnNewShape();
     }
     
@@ -141,14 +144,26 @@ public class GameEngine implements InputController {
         if (movePiece(0, 1)) {
             return true;
         } else {
-            // can't move down - place shape and spawn new one
+            // Can't move down: place piece and clear rows
             board.placePiece(currentShape);
-            board.clearFullRows();
+
+            int rowsCleared = board.clearFullRows();
+
+            // UPDATE SCORE BASED ON ROWS CLEARED
+            if (rowsCleared > 0) {
+                int pointsEarned = calculatePointsForRows(rowsCleared);
+                addScore(pointsEarned);
+            }
+
             spawnNewShape();
             return false;
         }
     }
-    
+
+    private int calculatePointsForRows(int rowsCleared) {
+        return rowsCleared * 100;
+    }
+
     public boolean movePiece(int deltaX, int deltaY) {
         if (currentShape == null || !gameRunning) {
             return false;
@@ -303,7 +318,15 @@ public class GameEngine implements InputController {
     public double getSmoothY() {
         return smoothY;
     }
-    
+
+    public int getScore() {
+        return currentScore;
+    }
+
+    public void addScore(int points) {
+        currentScore += points;
+    }
+
     // execute one AI action at a time with delay
     private void executeNextAIAction() {
         if (pendingAIMove == null || currentShape == null) {
