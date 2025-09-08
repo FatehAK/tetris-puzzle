@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 // JavaFX controller for the main game screen with falling pieces
 public class GameplayScreen extends BaseScreen {
     private boolean paused = false;
@@ -59,6 +61,8 @@ public class GameplayScreen extends BaseScreen {
     private static final Color BORDER_COLOR = Color.web("#333333");
     private static final Color PAUSE_TEXT_COLOR = Color.web("#FFFFFF");
     
+    private MediaPlayer backgroundPlayer;
+
     private Runnable onBackToMenu;
     private final ServerMonitor serverMonitor = new ServerMonitor();
 
@@ -66,6 +70,17 @@ public class GameplayScreen extends BaseScreen {
         currentConfig = GameConfig.getInstance();
         isExtendedMode = currentConfig.isExtendedMode();
         
+        // Start background music
+        try {
+            String musicPath = getClass().getResource("/audio/background.mp3").toExternalForm();
+            Media backgroundMusic = new Media(musicPath);
+            backgroundPlayer = new MediaPlayer(backgroundMusic);
+            backgroundPlayer.setCycleCount(MediaPlayer.INDEFINITE); // loop music
+            backgroundPlayer.play();
+        } catch (Exception e) {
+            System.out.println("Background music could not be loaded: " + e.getMessage());
+        }
+
         if (isExtendedMode) {
             setupTwoPlayerMode();
         } else {
@@ -125,6 +140,12 @@ public class GameplayScreen extends BaseScreen {
             engine.stopGame();
         }
         serverMonitor.hideDialog();
+
+        // Stop background music
+        if (backgroundPlayer != null) {
+            backgroundPlayer.stop();
+        }
+
         if (onBackToMenu != null) {
             onBackToMenu.run();
         } else {
