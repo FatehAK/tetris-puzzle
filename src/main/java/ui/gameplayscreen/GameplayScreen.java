@@ -196,43 +196,128 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     }
 
     private void handleGameOver() {
-        GameEngine engine = getSafeEngine(0);
-        if (engine == null) {
-            navigateToMenu();
+        if (engines.isEmpty())
             return;
-        }
 
-        int finalScore = engine.getScore();
         // pause background music and play game over sound
         audioManager.pauseBackgroundMusic();
         audioManager.playSoundEffect(AudioManager.SOUND_GAME_OVER);
 
-        TextInputDialog nameDialog = new TextInputDialog();
-        nameDialog.setTitle("Game Over");
-        nameDialog.setHeaderText("Enter your name for the leaderboard:");
-        Optional<String> nameResult = nameDialog.showAndWait();
+        GameEngine player1 = getAliveEngine(0);
+        if (player1 == null)
+            return;
 
-        nameResult.ifPresentOrElse(name -> {
-            HighScoreManager manager = HighScoreManager.getInstance();
+        if (isExtendedMode && engines.size() == 2) {
+            GameEngine player2 = getAliveEngine(1);
+            if (player2 == null)
+                return;
 
-            manager.addHighScore(new HighScore(name, finalScore));
+            if (player1.isGameRunning() || player2.isGameRunning())
+                return; // Wait until both finish
 
-            // Show high score screen with callback
-            Scene highScoreScene = HighScoreScreen.getScene(() -> {
-                navigateToMenu();
-            });
+            int score1 = player1.getScore();
+            int score2 = player2.getScore();
 
-            Platform.runLater(() -> {
-                Stage stage = (Stage) gameCanvas.getScene().getWindow();
-                stage.setScene(highScoreScene);
-            });
+            // Check if both scores zero
+            if (score1 == 0 && score2 == 0) {
+                showGameOverPrompt();
+                return;
+            }
 
-        }, () -> {
-            // User cancelled input, go to menu
-            navigateToMenu();
+            // Determine winner
+            if (score1 > score2) {
+                // Only save score if player1 is HUMAN
+                if (currentConfig.getPlayer1Type() != GameConfig.PlayerType.AI) {
+                    promptNameAndSaveScore(player1, currentConfig.getPlayer1Name(), score1);
+                } else {
+                    // AI won, no save, just prompt replay
+                    showGameOverPrompt();
+                }
+            } else if (score2 > score1) {
+                // Only save score if player2 is HUMAN
+                if (currentConfig.getPlayer2Type() != GameConfig.PlayerType.AI) {
+                    promptNameAndSaveScore(player2, currentConfig.getPlayer2Name(), score2);
+                } else {
+                    // AI won, no save, just prompt replay
+                    showGameOverPrompt();
+                }
+            } else {
+                // Tie or equal scores: prompt replay
+                showGameOverPrompt();
+            }
+        } else {
+            // Single or other mode
+            if (player1.isGameRunning())
+                return;
+
+            int score = player1.getScore();
+
+            if (score == 0) {
+                showGameOverPrompt();
+                return;
+            }
+
+            // If single player is AI, skip saving
+            if (currentConfig.getPlayer1Type() == GameConfig.PlayerType.AI) {
+                showGameOverPrompt();
+            } else {
+                promptNameAndSaveScore(player1, currentConfig.getPlayer1Name(), score);
+            }
+        }
+    }
+
+    private void promptNameAndSaveScore(GameEngine engine, String defaultName, int score) {
+        Platform.runLater(() -> {
+            TextInputDialog dialog = new TextInputDialog(defaultName);
+            dialog.setTitle("Game Over");
+            dialog.setHeaderText("Enter your name for the leaderboard:");
+            Optional<String> result = dialog.showAndWait();
+
+            if (result.isPresent() && !result.get().trim().isEmpty()) {
+                String name = result.get().trim();
+                HighScore newScore = new HighScore(name, score);
+                HighScoreManager.getInstance().addHighScore(newScore);
+            }
+
+            showHighScoreScene();
         });
     }
 
+    private void showGameOverPrompt() {
+        Platform.runLater(() -> {
+            GameOverDialog.GameOverAction action = GameOverDialog.show(getStage());
+            if (action == GameOverDialog.GameOverAction.PLAY_AGAIN) {
+                restartGame();
+            } else {
+                navigateToMenu();
+            }
+        });
+    }
+
+    private void showHighScoreScene() {
+        Platform.runLater(() -> {
+            Scene highScoreScene = HighScoreScreen.getScene(() -> navigateToMenu());
+            Stage stage = getStage();
+            if (stage != null) {
+                stage.setScene(highScoreScene);
+            } else {
+                navigateToMenu();
+            }
+        });
+    }
+
+    private GameEngine getAliveEngine(int index) {
+        if (index >= 0 && index < engines.size()) {
+            return engines.get(index);
+        }
+        return null;
+    }
+
+    private Stage getStage() {
+        return gameCanvas != null && gameCanvas.getScene() != null
+                ? (Stage) gameCanvas.getScene().getWindow()
+                : null;
+    }
 
     private void restartGame() {
         // stop all current games
@@ -244,7 +329,6 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         paused = false;
         serverMonitorStarted = false;
         finalResultsHandled = false;
-
         // resume background music (already in gameplay mode, just resume if paused)
         audioManager.resumeBackgroundMusic();
 
@@ -783,13 +867,12 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         }
     }
 
-
     public static Scene getScene(Runnable onBackToMenu) {
         GameConfig config = GameConfig.getInstance();
 
         // dynamic window sizing based on mode
         int width = config.isExtendedMode() ? 700 : 400;
-        int height = config.isExtendedMode() ? 660 : 630;
+        int height = config.isExtendedMode() ? 650 : 600;
 
         LoadResult<GameplayScreen> result = loadSceneWithController(
                 GameplayScreen.class, "gameplay.fxml", width, height);
