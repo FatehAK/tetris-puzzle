@@ -8,28 +8,11 @@
       <Label fx:id="titleLabel" styleClass="high-score-title" text="HIGH SCORES" />
       <VBox fx:id="scoreTableContainer" styleClass="score-table">
             <HBox styleClass="score-header">
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Rank"/>
-                  </children>
-               </VBox>
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Name"/>
-                  </children>
-               </VBox>
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Score"/>
-                  </children>
-               </VBox>
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Date"/>
-                  </children>
-               </VBox>
+                     <Label styleClass="score-header-text" text="Rank"/>
+                     <Label styleClass="score-header-text" text="Name"/>
+                     <Label styleClass="score-header-text" text="Score"/>
+                     <Label styleClass="score-header-text" text="Date"/>
             </HBox>
-
       </VBox>
       <VBox fx:id="backButtonContainer" styleClass="back-button-container">
          <Button fx:id="backButton" styleClass="back-button" text="Back to Menu" />

@@ -50,27 +50,22 @@ public class HighScoreScreen extends BaseScreen {
     }
 
     private HBox createScoreRow(int rank, HighScore score) {
-        HBox row = new HBox();
-        row.getStyleClass().add("score-row");  // Optional style class, add for CSS
-
-        // Rank Label
+        HBox row = new HBox(20); // Add spacing between columns
+        row.getStyleClass().add("score-row");
+        
         Label rankLabel = new Label(String.valueOf(rank));
-        rankLabel.getStyleClass().addAll("score-cell", "score-rank");
-
-        // Player Name Label
         Label nameLabel = new Label(score.getPlayerName());
-        nameLabel.getStyleClass().addAll("score-cell", "score-name");
-
-        // Score Label
         Label scoreLabel = new Label(String.valueOf(score.getScore()));
-        scoreLabel.getStyleClass().addAll("score-cell", "score-score");
-
-        // Date Label (format your stored date; adjust if HighScore stores differently)
         String formattedDate = (score.getDate() != null) ? score.getDate().format(dateFormatter) : "";
         Label dateLabel = new Label(formattedDate);
-        dateLabel.getStyleClass().addAll("score-cell", "score-date");
 
-        // Add all columns to the row
+        rankLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
+        nameLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
+        scoreLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
+        dateLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
+        
+
+
         row.getChildren().addAll(rankLabel, nameLabel, scoreLabel, dateLabel);
 
         return row;
