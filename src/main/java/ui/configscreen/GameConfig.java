@@ -11,6 +11,11 @@ public class GameConfig {
     // configuration settings
     private PlayerType player1Type = PlayerType.HUMAN;
     private PlayerType player2Type = PlayerType.HUMAN;
+
+    // --- ADD player names ---
+    private String player1Name = "Player 1";
+    private String player2Name = "Player 2";
+
     private boolean musicEnabled = true;
     private boolean soundEnabled = true;
     private boolean extendedMode = false;
@@ -45,7 +50,25 @@ public class GameConfig {
     public void setPlayer2Type(PlayerType player2Type) {
         this.player2Type = player2Type;
     }
-    
+
+    // player1Name getter and setter
+    public String getPlayer1Name() {
+        return player1Name;
+    }
+
+    public void setPlayer1Name(String player1Name) {
+        this.player1Name = player1Name;
+    }
+
+    // player2Name getter and setter
+    public String getPlayer2Name() {
+        return player2Name;
+    }
+
+    public void setPlayer2Name(String player2Name) {
+        this.player2Name = player2Name;
+    }
+
     // music setting
     public boolean isMusicEnabled() {
         return musicEnabled;

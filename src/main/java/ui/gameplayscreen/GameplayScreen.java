@@ -14,26 +14,26 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
-import javafx.stage.Stage;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 import model.GameBoard;
-import model.HighScore;
 import model.GameEngine;
+import model.HighScore;
 import model.TetrisShape;
 import ui.BaseScreen;
 import ui.GameOverDialog;
-import util.ShapeColors;
 import ui.highscorescreen.HighScoreScreen;
 import util.HighScoreManager;
+import util.ShapeColors;
 import util.ServerMonitor;
-import util.AudioManager;
-import util.AudioObserver;
 import ui.configscreen.GameConfig;
 import java.util.ArrayList;
+import util.AudioManager;
+import util.AudioObserver;
 import java.util.List;
 import java.util.Random;
 import java.util.Optional;
@@ -47,7 +47,29 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     @FXML private VBox gameContainer;
     @FXML private Button backButton;
     @FXML private Label audioStatusLabel;
-    @FXML private Label scoreLabel;
+
+    // Player 1 info labels
+    @FXML private Label playerOneNameLabel;
+    @FXML private Label playerOneTypeLabel;
+    @FXML private Label initialLevelLabel;
+    @FXML private Label currentLevelLabel;
+    @FXML private Label linesErasedLabel;
+    @FXML private Label scoreValueLabel;
+    @FXML private Canvas nextTetrominoCanvas;
+
+    @FXML private HBox root;
+    @FXML private VBox infoPanel;
+    @FXML private VBox infoPanelsContainer;
+
+    // Player 2 info labels (for two players)
+    private VBox playerTwoInfoPanel = null;
+    private Label playerTwoNameLabel;
+    private Label playerTwoTypeLabel;
+    private Label initialLevelLabel2;
+    private Label currentLevelLabel2;
+    private Label linesErasedLabel2;
+    private Label scoreValueLabel2;
+    private Canvas nextTetrominoCanvas2;
 
     private final List<GameEngine> engines = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
@@ -146,11 +168,9 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             engine.stopGame();
         }
         serverMonitor.hideDialog();
-
         // stop audio and cleanup
         audioManager.exitGameplayMode();  // stops music and exits gameplay mode
         audioManager.removeObserver(this);
-
         if (onBackToMenu != null) {
             onBackToMenu.run();
         } else {
@@ -182,11 +202,10 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             return;
         }
 
+        int finalScore = engine.getScore();
         // pause background music and play game over sound
         audioManager.pauseBackgroundMusic();
         audioManager.playSoundEffect(AudioManager.SOUND_GAME_OVER);
-
-        int finalScore = engine.getScore();
 
         TextInputDialog nameDialog = new TextInputDialog();
         nameDialog.setTitle("Game Over");
@@ -213,6 +232,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             navigateToMenu();
         });
     }
+
 
     private void restartGame() {
         // stop all current games
@@ -268,6 +288,15 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         configureEngine();
         engines.add(engine);
 
+        if (!gameContainer.getChildren().contains(gameCanvas)) {
+            gameContainer.getChildren().add(gameCanvas);
+        }
+
+        // Remove additional info panels for player 2
+        if (infoPanelsContainer.getChildren().size() > 1) {
+            infoPanelsContainer.getChildren().remove(1, infoPanelsContainer.getChildren().size());
+        }
+
         engine.startGame();
 
         drawGames();
@@ -286,6 +315,14 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         // create game seed for synchronized two-player sequences
         gameSeed = System.currentTimeMillis();
 
+        // Ensure Player 1 info panel is present
+        if (!infoPanelsContainer.getChildren().contains(infoPanel)) {
+            infoPanelsContainer.getChildren().add(infoPanel);
+        }
+
+        // Add Player 2 info panel dynamically
+        addPlayerTwoInfoPanel();
+
         for (int i = 0; i < 2; i++) {
             VBox playerBox = new VBox(10);
             playerBox.setAlignment(Pos.CENTER);
@@ -296,7 +333,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             Label playerLabel = new Label("Player " + (i + 1));
             playerLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
             Label typeLabel = new Label("(" + playerType + ")");
-            typeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+            typeLabel.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 14px;");
             labelContainer.getChildren().addAll(playerLabel, typeLabel);
 
             // game canvas
@@ -341,17 +378,106 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         }
     }
 
+    private void addPlayerTwoInfoPanel() {
+        if (playerTwoInfoPanel != null) return; // already created
+
+        playerTwoInfoPanel = new VBox(18);
+        playerTwoInfoPanel.setPrefWidth(220);
+        playerTwoInfoPanel.getStyleClass().add("info-panel");
+        playerTwoInfoPanel.setAlignment(Pos.CENTER);
+        playerTwoInfoPanel.setStyle("-fx-padding: 20 0 20 0;");
+
+        Label title = new Label("Game Info");
+        title.getStyleClass().add("info-title");
+        playerTwoInfoPanel.getChildren().add(title);
+
+        playerTwoNameLabel = createInfoRow(playerTwoInfoPanel, "Player 2:");
+        playerTwoTypeLabel = createInfoRow(playerTwoInfoPanel, "Player Type:");
+        initialLevelLabel2 = createInfoRow(playerTwoInfoPanel, "Initial Level:");
+        currentLevelLabel2 = createInfoRow(playerTwoInfoPanel, "Current Level:");
+        linesErasedLabel2 = createInfoRow(playerTwoInfoPanel, "Lines Erased:");
+        scoreValueLabel2 = createInfoRow(playerTwoInfoPanel, "Score:");
+
+        Label nextLabel = new Label("Next Tetromino");
+        nextLabel.getStyleClass().add("info-label");
+        playerTwoInfoPanel.getChildren().add(nextLabel);
+
+        nextTetrominoCanvas2 = new Canvas(60, 60);
+        nextTetrominoCanvas2.getStyleClass().add("next-tetromino-canvas");
+        playerTwoInfoPanel.getChildren().add(nextTetrominoCanvas2);
+
+        infoPanelsContainer.getChildren().add(playerTwoInfoPanel);
+    }
+
+    private Label createInfoRow(VBox parent, String labelText) {
+        Label valueLabel = new Label();
+        valueLabel.getStyleClass().add("info-value");
+
+        HBox hbox = new HBox(10);
+        Label label = new Label(labelText);
+        label.getStyleClass().add("info-label");
+
+        hbox.getChildren().addAll(label, valueLabel);
+        parent.getChildren().add(hbox);
+        return valueLabel;
+    }
+
+    private void updateGameInfo() {
+        GameEngine engine1 = getSafeEngine(0);
+        if (engine1 == null) return;
+
+        playerOneNameLabel.setText(currentConfig.getPlayer1Name());
+        playerOneTypeLabel.setText(currentConfig.getPlayer1Type().toString());
+        initialLevelLabel.setText(String.valueOf(engine1.getInitialLevel()));
+        currentLevelLabel.setText(String.valueOf(engine1.getCurrentLevel()));
+        linesErasedLabel.setText(String.valueOf(engine1.getLinesErased()));
+        scoreValueLabel.setText(String.valueOf(engine1.getScore()));
+
+        drawNextTetromino(engine1.getNextShape(), nextTetrominoCanvas);
+
+        if (playerTwoInfoPanel != null) {
+            GameEngine engine2 = getSafeEngine(1);
+            if (engine2 != null) {
+                playerTwoNameLabel.setText(currentConfig.getPlayer2Name());
+                playerTwoTypeLabel.setText(currentConfig.getPlayer2Type().toString());
+                initialLevelLabel2.setText(String.valueOf(engine2.getInitialLevel()));
+                currentLevelLabel2.setText(String.valueOf(engine2.getCurrentLevel()));
+                linesErasedLabel2.setText(String.valueOf(engine2.getLinesErased()));
+                scoreValueLabel2.setText(String.valueOf(engine2.getScore()));
+
+                drawNextTetromino(engine2.getNextShape(), nextTetrominoCanvas2);
+            }
+        }
+    }
+
+    private void drawNextTetromino(TetrisShape shape, Canvas canvas) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        if (shape == null) return;
+        int blockSize = 15;
+        for (int r = 0; r < shape.getHeight(); r++) {
+            for (int c = 0; c < shape.getWidth(); c++) {
+                if (shape.isCellFilled(r, c)) {
+                    gc.setFill(ShapeColors.getFillColor(shape.getColor()));
+                    double x = 12 + c * blockSize;
+                    double y = 12 + r * blockSize;
+                    gc.fillRect(x, y, blockSize, blockSize);
+                    gc.setStroke(ShapeColors.getBorderColor(shape.getColor()));
+                    gc.strokeRect(x, y, blockSize, blockSize);
+                }
+            }
+        }
+    }
+
     private void startGameLoop() {
         gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 if (!paused) {
                     updateGames(now);
-                    updateScoreDisplay();
+                    updateGameInfo(); // <-- Call to update info panel
                 }
                 drawGames();
-
-                // check for game over
                 checkGameOver();
             }
         };
@@ -361,13 +487,6 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     private void updateGames(long now) {
         for (GameEngine engine : engines) {
             engine.updateGame(now);
-        }
-    }
-
-    private void updateScoreDisplay() {
-        GameEngine engine = getSafeEngine(0);
-        if (engine != null) {
-            scoreLabel.setText("Score: " + engine.getScore());
         }
     }
 
@@ -663,6 +782,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             audioStatusLabel.setText(String.format("Music: %s  Sound: %s", musicStatus, soundStatus));
         }
     }
+
 
     public static Scene getScene(Runnable onBackToMenu) {
         GameConfig config = GameConfig.getInstance();

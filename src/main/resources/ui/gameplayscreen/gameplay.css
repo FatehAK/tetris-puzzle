@@ -2,6 +2,55 @@
     -fx-background-color: #1e272e;
 }
 
+.info-panel {
+    -fx-background-color: rgba(30,39,46,0.9);
+    -fx-padding: 16 12 16 24;
+    -fx-border-color: #ffed4e;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(two-pass-box, #444, 10, 0.48, 0, 2);
+}
+
+.info-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffed4e;
+    -fx-padding: 0 0 10 0;
+}
+
+.info-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #ffd700;
+}
+
+.info-value {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 0 0 0 8;
+}
+
+.next-tetromino-canvas {
+    -fx-border-color: #bababa;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-background-color: transparent;
+}
+
+.field-panel {
+    -fx-alignment: center;
+    -fx-padding: 12;
+}
+
+.score-main-label {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-padding: 0 0 10 0;
+}
+
 .game-field {
     -fx-background-color: #1e272e;
     -fx-border-color: #333333;

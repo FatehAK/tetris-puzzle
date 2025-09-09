@@ -33,6 +33,36 @@ public class GameEngine implements InputController {
     private Gson gson;
 
     private int currentScore = 0;
+    private int initialLevel = 1;   // default start level
+    private int currentLevel = 1;   // increments as needed
+    private int linesErased = 0;    // total cleared lines tracker
+
+    public int getInitialLevel() {
+        return initialLevel;
+    }
+
+    public void setInitialLevel(int level) {
+        this.initialLevel = level;
+        this.currentLevel = level; // sync current level when initial level set
+    }
+
+    public int getCurrentLevel() {
+        return currentLevel;
+    }
+
+    public void setCurrentLevel(int level) {
+        this.currentLevel = level;
+    }
+
+    public int getLinesErased() {
+        return linesErased;
+    }
+
+    public void addLinesErased(int count) {
+        linesErased += count;
+        // Example: increase level every 10 lines cleared
+        currentLevel = initialLevel + (linesErased / 10);
+    }
 
     public GameEngine() {
         this(new Random());
@@ -65,6 +95,11 @@ public class GameEngine implements InputController {
         lastDropTime = System.nanoTime(); // initialize timing to prevent immediate drop
         nextShapeType = null; // reset next shape to trigger random first piece
         currentScore = 0;
+
+        // Initialize levels and lines for new game
+        setInitialLevel(1);
+        linesErased = 0;
+
         spawnNewShape();
     }
     
@@ -153,6 +188,7 @@ public class GameEngine implements InputController {
             if (rowsCleared > 0) {
                 int pointsEarned = calculatePointsForRows(rowsCleared);
                 addScore(pointsEarned);
+                addLinesErased(rowsCleared); // update lines & level
             }
 
             spawnNewShape();
