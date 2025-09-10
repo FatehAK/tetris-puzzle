@@ -18,3 +18,11 @@
     -fx-font-size: 14px;
     -fx-pref-width: 120px;
 }
+
+.audio-status-label {
+    -fx-text-fill: white;
+    -fx-font-family: Arial;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-alignment: center;
+}

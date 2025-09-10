@@ -1,5 +1,5 @@
 package model;
-
+import util.AudioManager;
 // Manages the 10x20 Tetris game board and collision detection
 public class GameBoard {
     public static final int BOARD_WIDTH = 10;
@@ -84,6 +84,7 @@ public class GameBoard {
      * Multiple full lines can be cleared in a single call, and the shifting is repeated as needed.
      * This method modifies the board in place.
      */
+
     public void clearFullRows() {
         for (int row = 0; row < BOARD_HEIGHT; ) {
             boolean fullRow = true;
@@ -96,6 +97,9 @@ public class GameBoard {
             }
 
             if (fullRow) {
+                // play line clear sound effect
+                AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_LINE_CLEAR);
+
                 // shift all rows above down by one
                 for (int y = row; y > 0; y--) {
                     System.arraycopy(board[y - 1], 0, board[y], 0, BOARD_WIDTH);

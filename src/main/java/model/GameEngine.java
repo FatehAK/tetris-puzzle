@@ -5,6 +5,8 @@ import java.net.*;
 import java.util.Random;
 import com.google.gson.Gson;
 
+import util.AudioManager;
+
 // Controls the game logic and piece movement
 public class GameEngine implements InputController {
     private GameBoard board;
@@ -165,11 +167,19 @@ public class GameEngine implements InputController {
     }
     
     public boolean movePieceLeft() {
-        return movePiece(-1, 0);
+        boolean moved = movePiece(-1, 0);
+        if (moved) {
+            AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_MOVE_ROTATE);
+        }
+        return moved;
     }
     
     public boolean movePieceRight() {
-        return movePiece(1, 0);
+        boolean moved = movePiece(1, 0);
+        if (moved) {
+            AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_MOVE_ROTATE);
+        }
+        return moved;
     }
     
     // InputController interface implementations
@@ -200,17 +210,20 @@ public class GameEngine implements InputController {
         
         // try rotation at current position
         if (tryRotation(0, 0)) {
+            AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_MOVE_ROTATE);
             return true;
         }
         
         // wall kick attempts - try moving left or right if rotation fails
         if (tryRotation(-1, 0) || tryRotation(1, 0)) {
+            AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_MOVE_ROTATE);
             return true;
         }
         
         // additional wall kick for I-piece (try moving 2 positions)
         if (currentShape.getType() == TetrisShape.ShapeType.I) {
             if (tryRotation(-2, 0) || tryRotation(2, 0)) {
+                AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_MOVE_ROTATE);
                 return true;
             }
         }
