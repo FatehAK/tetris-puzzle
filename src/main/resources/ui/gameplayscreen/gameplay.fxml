@@ -4,25 +4,68 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.canvas.*?>
 
-<VBox xmlns="http://javafx.com/javafx"
+<HBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="ui.gameplayscreen.GameplayScreen"
       fx:id="root"
-      prefHeight="600.0" prefWidth="400.0"
       alignment="CENTER"
-      spacing="20"
+      spacing="10"
       stylesheets="@gameplay.css">
-    
-    <!-- Audio status display at the top -->
-    <Label fx:id="audioStatusLabel" text="Music: ON  Sound: ON"
-           styleClass="audio-status-label" />
-    
-    <!-- Dynamic container for single/two-player layouts -->
-    <VBox fx:id="gameContainer" alignment="CENTER" spacing="20">
-        <!-- Default single-player canvas (replaced in two-player mode) -->
-        <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
+
+    <!-- Container for all player info panels -->
+    <VBox fx:id="infoPanelsContainer"
+      alignment="CENTER_LEFT"
+          spacing="10"
+          maxWidth="130"
+          minWidth="130"
+    >
+
+        <!-- Game Info Panel -->
+        <VBox fx:id="infoPanel"
+              alignment="TOP_CENTER"
+              spacing="10"
+              maxWidth="130"
+              minWidth="130"
+              styleClass="info-panel">
+
+            <!-- Game Progress Section -->
+            <VBox spacing="5" styleClass="info-section">
+                <HBox spacing="8">
+                    <Label text="Level:" styleClass="info-label"/>
+                    <Label fx:id="currentLevelLabel" styleClass="info-value"/>
+                </HBox>
+                <HBox spacing="8">
+                    <Label text="Lines:" styleClass="info-label"/>
+                    <Label fx:id="linesErasedLabel" styleClass="info-value"/>
+                </HBox>
+                <HBox spacing="8">
+                    <Label text="Score:" styleClass="info-label"/>
+                    <Label fx:id="scoreValueLabel" styleClass="info-value"/>
+                </HBox>
+            </VBox>
+
+            <!-- Next Piece Section -->
+            <VBox alignment="CENTER" spacing="5" styleClass="info-section">
+                <Label text="Next Piece" styleClass="next-piece-label"/>
+                <Canvas fx:id="nextTetrominoCanvas" width="60" height="60" styleClass="next-tetromino-canvas"/>
+            </VBox>
+        </VBox>
     </VBox>
 
-    <Button fx:id="backButton" text="Back to Menu" styleClass="game-button-small"/>
-    
-</VBox>
+    <!-- Gameplay Field and Controls -->
+    <VBox fx:id="gameContainer"
+          alignment="CENTER"
+          spacing="10"
+          styleClass="field-panel"
+          prefWidth="300">
+
+        <!-- Audio status display above canvas -->
+        <Label fx:id="audioStatusLabel" text="Music: ON  Sound: ON"
+               styleClass="audio-status-label" />
+
+        <!-- Default single-player canvas (replaced in two-player mode) -->
+        <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
+
+        <Button fx:id="backButton" text="Back to Menu" styleClass="game-button-small"/>
+    </VBox>
+</HBox>

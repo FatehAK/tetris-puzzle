@@ -1,6 +1,9 @@
 package ui.configscreen;
 
 import util.AudioManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
+import java.io.IOException;
 
 // Holds game configuration settings that can be shared between screens
 public class GameConfig {
@@ -11,6 +14,10 @@ public class GameConfig {
     // configuration settings
     private PlayerType player1Type = PlayerType.HUMAN;
     private PlayerType player2Type = PlayerType.HUMAN;
+
+    private String player1Name = "Player 1";
+    private String player2Name = "Player 2";
+
     private boolean musicEnabled = true;
     private boolean soundEnabled = true;
     private boolean extendedMode = false;
@@ -18,7 +25,12 @@ public class GameConfig {
     private int fieldHeight = 20;
     private int gameLevel = 1;
     
-    private GameConfig() {}
+    private static final String CONFIG_FILE = "tetris_config.json";
+    private ObjectMapper objectMapper = new ObjectMapper();
+    
+    private GameConfig() {
+        loadConfigurationFromFile();
+    }
 
     // thread-safe singleton pattern
     private static class InstanceHolder {
@@ -45,7 +57,25 @@ public class GameConfig {
     public void setPlayer2Type(PlayerType player2Type) {
         this.player2Type = player2Type;
     }
-    
+
+    // player1Name getter and setter
+    public String getPlayer1Name() {
+        return player1Name;
+    }
+
+    public void setPlayer1Name(String player1Name) {
+        this.player1Name = player1Name;
+    }
+
+    // player2Name getter and setter
+    public String getPlayer2Name() {
+        return player2Name;
+    }
+
+    public void setPlayer2Name(String player2Name) {
+        this.player2Name = player2Name;
+    }
+
     // music setting
     public boolean isMusicEnabled() {
         return musicEnabled;
@@ -101,5 +131,48 @@ public class GameConfig {
     
     public void setGameLevel(int gameLevel) {
         this.gameLevel = gameLevel;
+    }
+    
+    public void saveConfigurationToFile() {
+        try {
+            ConfigData configData = new ConfigData(
+                    fieldWidth, fieldHeight, gameLevel,
+                    musicEnabled, soundEnabled, extendedMode,
+                    player1Type.name(), player2Type.name()
+            );
+            objectMapper.writeValue(new File(CONFIG_FILE), configData);
+        } catch (IOException e) {
+            System.err.println("Failed to save configuration: " + e.getMessage());
+        }
+    }
+
+    private void loadConfigurationFromFile() {
+        try {
+            File configFile = new File(CONFIG_FILE);
+            if (configFile.exists()) {
+                ConfigData configData = objectMapper.readValue(configFile, ConfigData.class);
+
+                // Apply loaded data
+                this.fieldWidth = configData.getFieldWidth();
+                this.fieldHeight = configData.getFieldHeight();
+                this.gameLevel = configData.getGameLevel();
+                this.musicEnabled = configData.isMusicEnabled();
+                this.soundEnabled = configData.isSoundEnabled();
+                this.extendedMode = configData.isExtendedMode();
+
+                // Convert string back to enum
+                try {
+                    this.player1Type = PlayerType.valueOf(configData.getPlayer1Type());
+                    this.player2Type = PlayerType.valueOf(configData.getPlayer2Type());
+                } catch (IllegalArgumentException e) {
+                    // Use defaults if invalid
+                    this.player1Type = PlayerType.HUMAN;
+                    this.player2Type = PlayerType.HUMAN;
+                }
+
+            }
+        } catch (IOException e) {
+            System.out.println("No config file found or error loading, using defaults");
+        }
     }
 }

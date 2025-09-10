@@ -5,52 +5,17 @@
 
 <VBox fx:id="root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.highscorescreen.HighScoreScreen" styleClass="high-score-root" stylesheets="@highscore.css">
    <children>
-      <Label fx:id="titleLabel" styleClass="high-score-title" text="HIGH SCORES" />
+      <HBox fx:id="titleContainer" styleClass="title-container">
+         <Label fx:id="titleLabel" styleClass="high-score-title" text="HIGH SCORES" />
+         <Button fx:id="clearButton" styleClass="clear-button-small" text="Clear Scores" />
+      </HBox>
       <VBox fx:id="scoreTableContainer" styleClass="score-table">
-         <children>
             <HBox styleClass="score-header">
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Rank"/>
-                     <Label styleClass="score-header-text,score-points" text="1"/>
-                     <Label styleClass="score-header-text,score-points" text="2"/>
-                     <Label styleClass="score-header-text,score-points" text="3"/>
-                     <Label styleClass="score-header-text,score-points" text="4"/>
-                     <Label styleClass="score-header-text,score-points" text="5"/>
-                  </children>
-               </VBox>
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Name"/>
-                     <Label styleClass="score-header-text,score-points" text="Alice"/>
-                     <Label styleClass="score-header-text,score-points" text="Kevin"/>
-                     <Label styleClass="score-header-text,score-points" text="Ben"/>
-                     <Label styleClass="score-header-text,score-points" text="Jason"/>
-                     <Label styleClass="score-header-text,score-points" text="Louis"/>
-                  </children>
-               </VBox>
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Score"/>
-                     <Label styleClass="score-header-text,score-points" text="100000"/>
-                     <Label styleClass="score-header-text,score-points" text="95000"/>
-                     <Label styleClass="score-header-text,score-points" text="80000"/>
-                     <Label styleClass="score-header-text,score-points" text="50000"/>
-                     <Label styleClass="score-header-text,score-points" text="35000"/>
-                  </children>
-               </VBox>
-               <VBox>
-                  <children >
-                     <Label styleClass="score-header-text,score-rank" text="Date"/>
-                     <Label styleClass="score-header-text,score-points" text="10/30/2025"/>
-                     <Label styleClass="score-header-text,score-points" text="10/29/2025"/>
-                     <Label styleClass="score-header-text,score-points" text="11/01/2025"/>
-                     <Label styleClass="score-header-text,score-points" text="12/25/2025"/>
-                     <Label styleClass="score-header-text,score-points" text="10/14/2025"/>
-                  </children>
-               </VBox>
+                     <Label styleClass="score-header-text" text="Rank"/>
+                     <Label styleClass="score-header-text" text="Name"/>
+                     <Label styleClass="score-header-text" text="Score"/>
+                     <Label styleClass="score-header-text" text="Date"/>
             </HBox>
-         </children>
       </VBox>
       <VBox fx:id="backButtonContainer" styleClass="back-button-container">
          <Button fx:id="backButton" styleClass="back-button" text="Back to Menu" />

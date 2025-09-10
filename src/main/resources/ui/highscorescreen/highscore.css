@@ -4,12 +4,32 @@
     -fx-alignment: center;
 }
 
+.title-container {
+    -fx-alignment: center;
+    -fx-padding: 0 0 30 0;
+    -fx-spacing: 40;
+}
+
 .high-score-title {
     -fx-font-family: Arial;
     -fx-font-size: 48px;
     -fx-font-weight: bold;
     -fx-text-fill: linear-gradient(to right, #ff0000, #ffed4e);
-    -fx-padding: 0 0 30 0;
+}
+
+.clear-button-small {
+    -fx-background-color: #e74c3c;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-family: Arial;
+    -fx-font-size: 12px;
+    -fx-pref-width: 90px;
+    -fx-pref-height: 25px;
+}
+
+.clear-button-small:hover {
+    -fx-background-color: #c0392b;
+    -fx-cursor: hand;
 }
 
 .score-table {
@@ -28,15 +48,8 @@
 .score-header {
     -fx-background-color: rgba(255, 215, 0, 0.2);
     -fx-background-radius: 10;
-    -fx-padding: 15;
-    -fx-spacing: 35;
-    -fx-alignment: baseline-left;
-}
-
-.score-row{
-    -fx-padding:0 0 0 15;
-    -fx-spacing: 0;
-    -fx-alignment: baseline-left;
+    -fx-padding: 10 0 10 5;
+    -fx-spacing: 20;
 }
 
 .score-header-text {
@@ -44,48 +57,29 @@
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: #ffd700;
+    -fx-min-width: 80px;
 }
 
+.score-row {
+    -fx-background-radius: 10;
+    -fx-padding: 10 0 10 5;
+    -fx-spacing: 20;
+    -fx-border-radius: 4;
+}
 
+.score-row Label {
+    -fx-padding: 2 10 2 10;
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+}
 
 .score-row:hover {
     -fx-background-color: rgba(255, 255, 255, 0.1);
 }
 
-.score-row-highlighted {
-    -fx-background-color: rgba(255, 215, 0, 0.3);
-    -fx-border-color: #ffd700;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-}
-
-.score-text {
-    -fx-font-family: "Consolas", "Courier New", monospace;
-    -fx-font-size: 16px;
-    -fx-text-fill: #ffffff;
-}
-
-.score-rank {
-    -fx-text-fill: #ffd700;
-    -fx-font-weight: bold;
-}
-
-.score-name {
-    -fx-text-fill: #87ceeb;
-}
-
-.score-points {
-    -fx-text-fill: #98fb98;
-    -fx-font-weight: bold;
-}
-
-.score-date {
-    -fx-text-fill: #dda0dd;
-}
-
-.back-button-container{
-   -fx-alignment: center;
-   -fx-padding: 20 0 0 0;
+.back-button-container {
+    -fx-alignment: center;
+    -fx-padding: 20 0 0 0;
 }
 
 .back-button {
@@ -100,4 +94,23 @@
 .back-button:hover {
     -fx-background-color: #5ba0f2;
     -fx-cursor: hand;
+}
+
+.score-header > VBox {
+    -fx-min-width: 60px;
+    -fx-max-width: 60px;
+    -fx-alignment: center;
+}
+
+.score-header > VBox:nth-child(2) {
+    -fx-min-width: 180px;
+    -fx-max-width: 180px;
+    -fx-alignment: center-left;
+}
+
+.score-header > VBox:nth-child(3),
+.score-header > VBox:nth-child(4) {
+    -fx-min-width: 110px;
+    -fx-max-width: 110px;
+    -fx-alignment: center;
 }

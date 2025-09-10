@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import util.AudioManager;
 
 // Controls the game logic and piece movement
-public class GameEngine implements InputController {
+public class GameEngine {
     private GameBoard board;
     private TetrisShape currentShape;
     private TetrisShape.ShapeType nextShapeType;
@@ -31,7 +31,39 @@ public class GameEngine implements InputController {
     private OpMove pendingExternalMove = null;
     private int externalRotationsCompleted = 0;
     private Gson gson;
-    
+
+    private int currentScore = 0;
+    private int initialLevel = 1;   // default start level
+    private int currentLevel = 1;   // increments as needed
+    private int linesErased = 0;    // total cleared lines tracker
+
+    public int getInitialLevel() {
+        return initialLevel;
+    }
+
+    public void setInitialLevel(int level) {
+        this.initialLevel = level;
+        this.currentLevel = level; // sync current level when initial level set
+    }
+
+    public int getCurrentLevel() {
+        return currentLevel;
+    }
+
+    public void setCurrentLevel(int level) {
+        this.currentLevel = level;
+    }
+
+    public int getLinesErased() {
+        return linesErased;
+    }
+
+    public void addLinesErased(int count) {
+        linesErased += count;
+        // Example: increase level every 10 lines cleared
+        currentLevel = initialLevel + (linesErased / 10);
+    }
+
     public GameEngine() {
         this(new Random());
     }
@@ -62,6 +94,12 @@ public class GameEngine implements InputController {
         board.clearBoard();
         lastDropTime = System.nanoTime(); // initialize timing to prevent immediate drop
         nextShapeType = null; // reset next shape to trigger random first piece
+        currentScore = 0;
+
+        // Initialize levels and lines for new game
+        setInitialLevel(1);
+        linesErased = 0;
+
         spawnNewShape();
     }
     
@@ -141,14 +179,34 @@ public class GameEngine implements InputController {
         if (movePiece(0, 1)) {
             return true;
         } else {
-            // can't move down - place shape and spawn new one
+            // Can't move down: place piece and clear rows
             board.placePiece(currentShape);
-            board.clearFullRows();
+
+            int rowsCleared = board.clearFullRows();
+
+            // UPDATE SCORE BASED ON ROWS CLEARED
+            if (rowsCleared > 0) {
+                int pointsEarned = calculatePointsForRows(rowsCleared);
+                addScore(pointsEarned);
+                addLinesErased(rowsCleared); // update lines & level
+            }
+
             spawnNewShape();
             return false;
         }
     }
-    
+
+    private int calculatePointsForRows(int rowsCleared) {
+        // Standard Tetris scoring rules
+        return switch (rowsCleared) {
+            case 1 -> 100;   // Single
+            case 2 -> 300;   // Double  
+            case 3 -> 600;   // Triple
+            case 4 -> 1000;  // Tetris
+            default -> 0;    // No lines cleared
+        };
+    }
+
     public boolean movePiece(int deltaX, int deltaY) {
         if (currentShape == null || !gameRunning) {
             return false;
@@ -182,25 +240,8 @@ public class GameEngine implements InputController {
         return moved;
     }
     
-    // InputController interface implementations
-    @Override
-    public boolean moveLeft() {
-        return movePieceLeft();
-    }
-    
-    @Override
-    public boolean moveRight() {
-        return movePieceRight();
-    }
-    
-    @Override
-    public boolean rotate() {
-        return rotatePiece();
-    }
-    
-    @Override
-    public void setFastDrop(boolean enabled) {
-        setFastDropEnabled(enabled);
+    public boolean executeCommand(GameCommand command) {
+        return command.execute(this);
     }
     
     public boolean rotatePiece() {
@@ -303,7 +344,15 @@ public class GameEngine implements InputController {
     public double getSmoothY() {
         return smoothY;
     }
-    
+
+    public int getScore() {
+        return currentScore;
+    }
+
+    public void addScore(int points) {
+        currentScore += points;
+    }
+
     // execute one AI action at a time with delay
     private void executeNextAIAction() {
         if (pendingAIMove == null || currentShape == null) {
@@ -312,12 +361,12 @@ public class GameEngine implements InputController {
         
         // first, handle rotations
         if (aiRotationsCompleted < pendingAIMove.rotations()) {
-            rotatePiece();
+            executeCommand(GameCommand.rotate());
             aiRotationsCompleted++;
         } else if (currentShape.getX() < pendingAIMove.column()) {
-            movePieceRight();
+            executeCommand(GameCommand.moveRight());
         } else if (currentShape.getX() > pendingAIMove.column()) {
-            movePieceLeft();
+            executeCommand(GameCommand.moveLeft());
         } else {
             // finally, clear the pending move
             pendingAIMove = null;
@@ -341,12 +390,12 @@ public class GameEngine implements InputController {
         
         // first, handle rotations
         if (externalRotationsCompleted < pendingExternalMove.opRotate()) {
-            rotatePiece();
+            executeCommand(GameCommand.rotate());
             externalRotationsCompleted++;
         } else if (currentShape.getX() < pendingExternalMove.opX()) {
-            movePieceRight();
+            executeCommand(GameCommand.moveRight());
         } else if (currentShape.getX() > pendingExternalMove.opX()) {
-            movePieceLeft();
+            executeCommand(GameCommand.moveLeft());
         } else {
             // finally, clear the pending move
             pendingExternalMove = null;
