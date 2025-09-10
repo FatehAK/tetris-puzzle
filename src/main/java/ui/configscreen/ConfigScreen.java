@@ -3,9 +3,6 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import ui.BaseScreen;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
-import java.io.IOException;
 
 // Controller for the configuration screen where users can set game options
 public class ConfigScreen extends BaseScreen {
@@ -42,13 +39,9 @@ public class ConfigScreen extends BaseScreen {
     private Runnable onBack;
     private GameConfig gameConfig;
 
-    // JSON persistence
-    private static final String CONFIG_FILE = "tetris_config.json";
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     public void initialize() {
-        gameConfig = GameConfig.getInstance();
-        loadConfigurationFromFile(); // Load saved config first
+        gameConfig = GameConfig.getInstance(); // Already loads from file automatically
         loadExistingSettings();
         setupFieldWidthSlider();
         setupFieldHeightSlider();
@@ -99,7 +92,6 @@ public class ConfigScreen extends BaseScreen {
     private void setupFieldWidthSlider() {
         widthSlider.setMin(5);
         widthSlider.setMax(15);
-        widthSlider.setValue(10);
         widthSlider.setShowTickLabels(true);
         widthSlider.setShowTickMarks(true);
         widthSlider.setMajorTickUnit(1);
@@ -107,7 +99,7 @@ public class ConfigScreen extends BaseScreen {
             int value = newVal.intValue();
             widthValue.setText(String.valueOf(value));
             gameConfig.setFieldWidth(value);
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
     }
 
@@ -115,7 +107,7 @@ public class ConfigScreen extends BaseScreen {
     private void setupFieldHeightSlider() {
         heightSlider.setMin(15);
         heightSlider.setMax(30);
-        heightSlider.setValue(20);
+        // setValue is set by loadExistingSettings()
         heightSlider.setShowTickLabels(true);
         heightSlider.setShowTickMarks(true);
         heightSlider.setMajorTickUnit(1);
@@ -123,7 +115,7 @@ public class ConfigScreen extends BaseScreen {
             int value = newVal.intValue();
             heightValue.setText(String.valueOf(value));
             gameConfig.setFieldHeight(value);
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
     }
 
@@ -131,7 +123,7 @@ public class ConfigScreen extends BaseScreen {
     private void setupGameLevelSlider() {
         levelSlider.setMin(1);
         levelSlider.setMax(10);
-        levelSlider.setValue(1);
+        // setValue is set by loadExistingSettings()
         levelSlider.setShowTickLabels(true);
         levelSlider.setShowTickMarks(true);
         levelSlider.setMajorTickUnit(1);
@@ -139,7 +131,7 @@ public class ConfigScreen extends BaseScreen {
             int value = newVal.intValue();
             levelValue.setText(String.valueOf(value));
             gameConfig.setGameLevel(value);
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
     }
 
@@ -150,7 +142,7 @@ public class ConfigScreen extends BaseScreen {
             boolean selected = musicCheckBox.isSelected();
             musicStatus.setText(selected ? "On" : "Off");
             gameConfig.setMusicEnabled(selected);
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
 
         // sound effects checkbox
@@ -158,7 +150,7 @@ public class ConfigScreen extends BaseScreen {
             boolean selected = soundCheckBox.isSelected();
             soundStatus.setText(selected ? "On" : "Off");
             gameConfig.setSoundEnabled(selected);
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
 
         // extended mode checkbox
@@ -173,7 +165,7 @@ public class ConfigScreen extends BaseScreen {
                 gameConfig.setPlayer2Type(GameConfig.PlayerType.HUMAN);
                 playerTwoHuman.setSelected(true);
             }
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
     }
 
@@ -198,7 +190,7 @@ public class ConfigScreen extends BaseScreen {
             } else if (newToggle == playerOneExternal) {
                 gameConfig.setPlayer1Type(GameConfig.PlayerType.EXTERNAL);
             }
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
 
         playerTwoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
@@ -209,7 +201,7 @@ public class ConfigScreen extends BaseScreen {
             } else if (newToggle == playerTwoExternal) {
                 gameConfig.setPlayer2Type(GameConfig.PlayerType.EXTERNAL);
             }
-            saveConfigurationToFile(); // Auto-save on change
+            gameConfig.saveConfigurationToFile();
         });
 
         // initialize player two radio buttons state based on extended mode
@@ -234,82 +226,6 @@ public class ConfigScreen extends BaseScreen {
         }
     }
 
-    /**
-     * Save current GameConfig to JSON file
-     */
-    private void saveConfigurationToFile() {
-        try {
-            ConfigData configData = new ConfigData(
-                    gameConfig.getFieldWidth(),
-                    gameConfig.getFieldHeight(),
-                    gameConfig.getGameLevel(),
-                    gameConfig.isMusicEnabled(),
-                    gameConfig.isSoundEnabled(),
-                    gameConfig.isExtendedMode(),
-                    gameConfig.getPlayer1Type().name(),
-                    gameConfig.getPlayer2Type().name()
-            );
-
-            objectMapper.writeValue(new File(CONFIG_FILE), configData);
-            System.out.println("Configuration saved: " + configData);
-
-        } catch (IOException e) {
-            System.err.println("Failed to save configuration: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Load configuration from JSON file and apply to GameConfig
-     */
-    private void loadConfigurationFromFile() {
-        try {
-            File configFile = new File(CONFIG_FILE);
-            if (configFile.exists()) {
-                ConfigData configData = objectMapper.readValue(configFile, ConfigData.class);
-
-                // Apply loaded data to GameConfig singleton
-                gameConfig.setFieldWidth(configData.getFieldWidth());
-                gameConfig.setFieldHeight(configData.getFieldHeight());
-                gameConfig.setGameLevel(configData.getGameLevel());
-                gameConfig.setMusicEnabled(configData.isMusicEnabled());
-                gameConfig.setSoundEnabled(configData.isSoundEnabled());
-                gameConfig.setExtendedMode(configData.isExtendedMode());
-
-                // Convert string back to enum
-                try {
-                    gameConfig.setPlayer1Type(GameConfig.PlayerType.valueOf(configData.getPlayer1Type()));
-                    gameConfig.setPlayer2Type(GameConfig.PlayerType.valueOf(configData.getPlayer2Type()));
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Invalid player type in config, using defaults");
-                    gameConfig.setPlayer1Type(GameConfig.PlayerType.HUMAN);
-                    gameConfig.setPlayer2Type(GameConfig.PlayerType.HUMAN);
-                }
-
-                System.out.println("Configuration loaded: " + configData);
-            } else {
-                System.out.println("No config file found, using GameConfig defaults");
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to load configuration: " + e.getMessage());
-            System.out.println("Using GameConfig defaults");
-        }
-    }
-
-    /**
-     * Get current configuration as data object (for teammates to use)
-     */
-    public ConfigData getCurrentConfig() {
-        return new ConfigData(
-                gameConfig.getFieldWidth(),
-                gameConfig.getFieldHeight(),
-                gameConfig.getGameLevel(),
-                gameConfig.isMusicEnabled(),
-                gameConfig.isSoundEnabled(),
-                gameConfig.isExtendedMode(),
-                gameConfig.getPlayer1Type().name(),
-                gameConfig.getPlayer2Type().name()
-        );
-    }
 
     public static Scene getScene(Runnable onBack) {
         LoadResult<ConfigScreen> result = loadSceneWithController(ConfigScreen.class, "config.fxml", 700, 640);

@@ -17,11 +17,12 @@ import java.util.List;
 public class HighScoreScreen extends BaseScreen {
 
     @FXML private Button backButton;
+    @FXML private Button clearButton;
     @FXML private VBox scoreTableContainer;
 
     private Runnable onBack;
 
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public void initialize() {
         backButton.setOnAction(e -> {
@@ -29,6 +30,9 @@ public class HighScoreScreen extends BaseScreen {
                 onBack.run();
             }
         });
+        
+        clearButton.setOnAction(e -> clearAllScores());
+        
         loadAndDisplayScores();
     }
 
@@ -63,16 +67,20 @@ public class HighScoreScreen extends BaseScreen {
         nameLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
         scoreLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
         dateLabel.setStyle("-fx-alignment: center-left; -fx-min-width: 80px;");
-        
-
 
         row.getChildren().addAll(rankLabel, nameLabel, scoreLabel, dateLabel);
 
         return row;
     }
 
+    private void clearAllScores() {
+        // clear scores in HighScoreManager (clears both memory and JSON file)
+        HighScoreManager.getInstance().clearScores();
+        loadAndDisplayScores();
+    }
+
     public static Scene getScene(Runnable onBack) {
-        LoadResult<HighScoreScreen> result = loadSceneWithController(HighScoreScreen.class, "highscore.fxml", 800, 600);
+        LoadResult<HighScoreScreen> result = loadSceneWithController(HighScoreScreen.class, "highscore.fxml", 800, 700);
         result.controller().onBack = onBack;
         return result.scene();
     }

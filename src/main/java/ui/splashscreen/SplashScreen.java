@@ -18,15 +18,15 @@ public class SplashScreen extends BaseScreen {
 
     public void playSplash(Runnable onFinish) {
         // fade in
-        FadeTransition fadeIn = new FadeTransition(Duration.seconds(2), root);
+        FadeTransition fadeIn = new FadeTransition(Duration.seconds(0.8), root);
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
 
         // fade out after delay
-        FadeTransition fadeOut = new FadeTransition(Duration.seconds(2), root);
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.8), root);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
-        fadeOut.setDelay(Duration.seconds(2));
+        fadeOut.setDelay(Duration.seconds(0.8));
 
         fadeIn.setOnFinished(e -> fadeOut.play());
         fadeOut.setOnFinished(e -> onFinish.run());

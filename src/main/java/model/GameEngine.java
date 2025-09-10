@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import util.AudioManager;
 
 // Controls the game logic and piece movement
-public class GameEngine implements InputController {
+public class GameEngine {
     private GameBoard board;
     private TetrisShape currentShape;
     private TetrisShape.ShapeType nextShapeType;
@@ -197,7 +197,14 @@ public class GameEngine implements InputController {
     }
 
     private int calculatePointsForRows(int rowsCleared) {
-        return rowsCleared * 100;
+        // Standard Tetris scoring rules
+        return switch (rowsCleared) {
+            case 1 -> 100;   // Single
+            case 2 -> 300;   // Double  
+            case 3 -> 600;   // Triple
+            case 4 -> 1000;  // Tetris
+            default -> 0;    // No lines cleared
+        };
     }
 
     public boolean movePiece(int deltaX, int deltaY) {
@@ -233,25 +240,8 @@ public class GameEngine implements InputController {
         return moved;
     }
     
-    // InputController interface implementations
-    @Override
-    public boolean moveLeft() {
-        return movePieceLeft();
-    }
-    
-    @Override
-    public boolean moveRight() {
-        return movePieceRight();
-    }
-    
-    @Override
-    public boolean rotate() {
-        return rotatePiece();
-    }
-    
-    @Override
-    public void setFastDrop(boolean enabled) {
-        setFastDropEnabled(enabled);
+    public boolean executeCommand(GameCommand command) {
+        return command.execute(this);
     }
     
     public boolean rotatePiece() {
@@ -371,12 +361,12 @@ public class GameEngine implements InputController {
         
         // first, handle rotations
         if (aiRotationsCompleted < pendingAIMove.rotations()) {
-            rotatePiece();
+            executeCommand(GameCommand.rotate());
             aiRotationsCompleted++;
         } else if (currentShape.getX() < pendingAIMove.column()) {
-            movePieceRight();
+            executeCommand(GameCommand.moveRight());
         } else if (currentShape.getX() > pendingAIMove.column()) {
-            movePieceLeft();
+            executeCommand(GameCommand.moveLeft());
         } else {
             // finally, clear the pending move
             pendingAIMove = null;
@@ -400,12 +390,12 @@ public class GameEngine implements InputController {
         
         // first, handle rotations
         if (externalRotationsCompleted < pendingExternalMove.opRotate()) {
-            rotatePiece();
+            executeCommand(GameCommand.rotate());
             externalRotationsCompleted++;
         } else if (currentShape.getX() < pendingExternalMove.opX()) {
-            movePieceRight();
+            executeCommand(GameCommand.moveRight());
         } else if (currentShape.getX() > pendingExternalMove.opX()) {
-            movePieceLeft();
+            executeCommand(GameCommand.moveLeft());
         } else {
             // finally, clear the pending move
             pendingExternalMove = null;

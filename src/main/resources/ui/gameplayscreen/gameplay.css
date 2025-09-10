@@ -4,12 +4,16 @@
 
 .info-panel {
     -fx-background-color: rgba(30,39,46,0.9);
-    -fx-padding: 16 12 16 24;
+    -fx-padding: 12 12 12 12;
     -fx-border-color: #ffed4e;
     -fx-border-width: 2;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
-    -fx-effect: dropshadow(two-pass-box, #444, 10, 0.48, 0, 2);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(two-pass-box, #444, 6, 0.3, 0, 1);
+}
+
+.info-section {
+    -fx-padding: 4 0 4 0;
 }
 
 .info-title {
@@ -20,23 +24,31 @@
 }
 
 .info-label {
-    -fx-font-size: 15px;
+    -fx-font-size: 16px;
     -fx-text-fill: #ffd700;
 }
 
 .info-value {
-    -fx-font-size: 15px;
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: #ffffff;
-    -fx-padding: 0 0 0 8;
+    -fx-padding: 0 0 0 6;
 }
 
 .next-tetromino-canvas {
-    -fx-border-color: #bababa;
-    -fx-border-width: 1;
-    -fx-background-radius: 6;
-    -fx-background-color: transparent;
+    -fx-border-color: #ffed4e;
+    -fx-border-width: 1.5;
+    -fx-background-radius: 8;
+    -fx-background-color: rgba(0,0,0,0.3);
 }
+
+.next-piece-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center;
+}
+
 
 .field-panel {
     -fx-alignment: center;

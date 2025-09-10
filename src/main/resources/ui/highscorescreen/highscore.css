@@ -4,12 +4,32 @@
     -fx-alignment: center;
 }
 
+.title-container {
+    -fx-alignment: center;
+    -fx-padding: 0 0 30 0;
+    -fx-spacing: 40;
+}
+
 .high-score-title {
     -fx-font-family: Arial;
     -fx-font-size: 48px;
     -fx-font-weight: bold;
     -fx-text-fill: linear-gradient(to right, #ff0000, #ffed4e);
-    -fx-padding: 0 0 30 0;
+}
+
+.clear-button-small {
+    -fx-background-color: #e74c3c;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-family: Arial;
+    -fx-font-size: 12px;
+    -fx-pref-width: 90px;
+    -fx-pref-height: 25px;
+}
+
+.clear-button-small:hover {
+    -fx-background-color: #c0392b;
+    -fx-cursor: hand;
 }
 
 .score-table {

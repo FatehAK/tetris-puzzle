@@ -5,7 +5,10 @@
 
 <VBox fx:id="root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.highscorescreen.HighScoreScreen" styleClass="high-score-root" stylesheets="@highscore.css">
    <children>
-      <Label fx:id="titleLabel" styleClass="high-score-title" text="HIGH SCORES" />
+      <HBox fx:id="titleContainer" styleClass="title-container">
+         <Label fx:id="titleLabel" styleClass="high-score-title" text="HIGH SCORES" />
+         <Button fx:id="clearButton" styleClass="clear-button-small" text="Clear Scores" />
+      </HBox>
       <VBox fx:id="scoreTableContainer" styleClass="score-table">
             <HBox styleClass="score-header">
                      <Label styleClass="score-header-text" text="Rank"/>

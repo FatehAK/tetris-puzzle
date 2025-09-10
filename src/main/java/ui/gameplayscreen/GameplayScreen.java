@@ -21,6 +21,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import model.GameBoard;
+import model.GameCommand;
 import model.GameEngine;
 import model.HighScore;
 import model.TetrisShape;
@@ -49,9 +50,6 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     @FXML private Label audioStatusLabel;
 
     // Player 1 info labels
-    @FXML private Label playerOneNameLabel;
-    @FXML private Label playerOneTypeLabel;
-    @FXML private Label initialLevelLabel;
     @FXML private Label currentLevelLabel;
     @FXML private Label linesErasedLabel;
     @FXML private Label scoreValueLabel;
@@ -63,9 +61,6 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
 
     // Player 2 info labels (for two players)
     private VBox playerTwoInfoPanel = null;
-    private Label playerTwoNameLabel;
-    private Label playerTwoTypeLabel;
-    private Label initialLevelLabel2;
     private Label currentLevelLabel2;
     private Label linesErasedLabel2;
     private Label scoreValueLabel2;
@@ -224,25 +219,23 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                 return;
             }
 
-            // Determine winner
+            // Save only the winner's score if human
             if (score1 > score2) {
-                // Only save score if player1 is HUMAN
-                if (currentConfig.getPlayer1Type() != GameConfig.PlayerType.AI) {
+                // Player 1 wins
+                if (currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
                     promptNameAndSaveScore(player1, currentConfig.getPlayer1Name(), score1);
                 } else {
-                    // AI won, no save, just prompt replay
                     showGameOverPrompt();
                 }
             } else if (score2 > score1) {
-                // Only save score if player2 is HUMAN
-                if (currentConfig.getPlayer2Type() != GameConfig.PlayerType.AI) {
+                // Player 2 wins
+                if (currentConfig.getPlayer2Type() == GameConfig.PlayerType.HUMAN) {
                     promptNameAndSaveScore(player2, currentConfig.getPlayer2Name(), score2);
                 } else {
-                    // AI won, no save, just prompt replay
                     showGameOverPrompt();
                 }
             } else {
-                // Tie or equal scores: prompt replay
+                // Tie - no score saved
                 showGameOverPrompt();
             }
         } else {
@@ -257,11 +250,11 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                 return;
             }
 
-            // If single player is AI, skip saving
-            if (currentConfig.getPlayer1Type() == GameConfig.PlayerType.AI) {
-                showGameOverPrompt();
-            } else {
+            // Only save if single player is HUMAN
+            if (currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
                 promptNameAndSaveScore(player1, currentConfig.getPlayer1Name(), score);
+            } else {
+                showGameOverPrompt();
             }
         }
     }
@@ -372,11 +365,38 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         configureEngine();
         engines.add(engine);
 
-        if (!gameContainer.getChildren().contains(gameCanvas)) {
-            gameContainer.getChildren().add(gameCanvas);
+        // Create player label container for single player
+        HBox labelContainer = new HBox(5);
+        labelContainer.setAlignment(Pos.CENTER);
+        
+        Label playerLabel = new Label(currentConfig.getPlayer1Name());
+        playerLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+        
+        Label typeLabel = new Label("(" + currentConfig.getPlayer1Type().toString() + ")");
+        typeLabel.setStyle("-fx-text-fill: #ffed4e; -fx-font-size: 14px; -fx-font-weight: bold;");
+        
+        labelContainer.getChildren().addAll(playerLabel, typeLabel);
+        
+        int audioIndex = -1;
+        for (int i = 0; i < gameContainer.getChildren().size(); i++) {
+            if (gameContainer.getChildren().get(i).getId() != null && 
+                gameContainer.getChildren().get(i).getId().equals("audioStatusLabel")) {
+                audioIndex = i;
+                break;
+            }
+        }
+        
+        if (audioIndex != -1) {
+            // insert after audio status label
+            if (!gameContainer.getChildren().contains(labelContainer)) {
+                gameContainer.getChildren().add(audioIndex + 1, labelContainer);
+            }
+            if (!gameContainer.getChildren().contains(gameCanvas)) {
+                gameContainer.getChildren().add(audioIndex + 2, gameCanvas);
+            }
         }
 
-        // Remove additional info panels for player 2
+        // remove additional info panels for player 2
         if (infoPanelsContainer.getChildren().size() > 1) {
             infoPanelsContainer.getChildren().remove(1, infoPanelsContainer.getChildren().size());
         }
@@ -404,7 +424,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             infoPanelsContainer.getChildren().add(infoPanel);
         }
 
-        // Add Player 2 info panel dynamically
+        // add Player 2 info panel dynamically
         addPlayerTwoInfoPanel();
 
         for (int i = 0; i < 2; i++) {
@@ -417,7 +437,9 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             Label playerLabel = new Label("Player " + (i + 1));
             playerLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
             Label typeLabel = new Label("(" + playerType + ")");
-            typeLabel.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 14px;");
+            // set color based on player: yellow for Player 1, blue for Player 2
+            String typeColor = (i == 0) ? "#ffed4e" : "#74b9ff";
+            typeLabel.setStyle("-fx-text-fill: " + typeColor + "; -fx-font-size: 14px; -fx-font-weight: bold;");
             labelContainer.getChildren().addAll(playerLabel, typeLabel);
 
             // game canvas
@@ -445,7 +467,8 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             engine.startGame();
         }
 
-        gameContainer.getChildren().add(playerContainer);
+        int buttonIndex = gameContainer.getChildren().size() - 1;
+        gameContainer.getChildren().add(buttonIndex, playerContainer);
 
         drawGames();
     }
@@ -465,31 +488,41 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
     private void addPlayerTwoInfoPanel() {
         if (playerTwoInfoPanel != null) return; // already created
 
-        playerTwoInfoPanel = new VBox(18);
-        playerTwoInfoPanel.setPrefWidth(220);
+        playerTwoInfoPanel = new VBox(10);
+        playerTwoInfoPanel.setMaxWidth(130);
+        playerTwoInfoPanel.setMinWidth(130);
         playerTwoInfoPanel.getStyleClass().add("info-panel");
-        playerTwoInfoPanel.setAlignment(Pos.CENTER);
-        playerTwoInfoPanel.setStyle("-fx-padding: 20 0 20 0;");
+        playerTwoInfoPanel.setStyle("-fx-border-color: #74b9ff;");
+        playerTwoInfoPanel.setAlignment(Pos.TOP_CENTER);
 
-        Label title = new Label("Game Info");
-        title.getStyleClass().add("info-title");
-        playerTwoInfoPanel.getChildren().add(title);
+        // game progress section
+        VBox progressSection = new VBox(5);
+        progressSection.getStyleClass().add("info-section");
+        
+        currentLevelLabel2 = createInfoRow(progressSection, "Level:");
+        linesErasedLabel2 = createInfoRow(progressSection, "Lines:");
+        scoreValueLabel2 = createInfoRow(progressSection, "Score:");
+        
+        ((HBox)progressSection.getChildren().get(0)).getChildren().get(0).setStyle("-fx-text-fill: #74b9ff;");
+        ((HBox)progressSection.getChildren().get(1)).getChildren().get(0).setStyle("-fx-text-fill: #74b9ff;");
+        ((HBox)progressSection.getChildren().get(2)).getChildren().get(0).setStyle("-fx-text-fill: #74b9ff;");
+        
+        playerTwoInfoPanel.getChildren().add(progressSection);
 
-        playerTwoNameLabel = createInfoRow(playerTwoInfoPanel, "Player 2:");
-        playerTwoTypeLabel = createInfoRow(playerTwoInfoPanel, "Player Type:");
-        initialLevelLabel2 = createInfoRow(playerTwoInfoPanel, "Initial Level:");
-        currentLevelLabel2 = createInfoRow(playerTwoInfoPanel, "Current Level:");
-        linesErasedLabel2 = createInfoRow(playerTwoInfoPanel, "Lines Erased:");
-        scoreValueLabel2 = createInfoRow(playerTwoInfoPanel, "Score:");
-
-        Label nextLabel = new Label("Next Tetromino");
-        nextLabel.getStyleClass().add("info-label");
-        playerTwoInfoPanel.getChildren().add(nextLabel);
+        // next piece section
+        VBox nextSection = new VBox(5);
+        nextSection.getStyleClass().add("info-section");
+        nextSection.setAlignment(Pos.CENTER);
+        
+        Label nextLabel = new Label("Next Piece");
+        nextLabel.getStyleClass().add("next-piece-label");
+        nextSection.getChildren().add(nextLabel);
 
         nextTetrominoCanvas2 = new Canvas(60, 60);
         nextTetrominoCanvas2.getStyleClass().add("next-tetromino-canvas");
-        playerTwoInfoPanel.getChildren().add(nextTetrominoCanvas2);
-
+        nextSection.getChildren().add(nextTetrominoCanvas2);
+        
+        playerTwoInfoPanel.getChildren().add(nextSection);
         infoPanelsContainer.getChildren().add(playerTwoInfoPanel);
     }
 
@@ -497,7 +530,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("info-value");
 
-        HBox hbox = new HBox(10);
+        HBox hbox = new HBox(8);
         Label label = new Label(labelText);
         label.getStyleClass().add("info-label");
 
@@ -510,9 +543,6 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         GameEngine engine1 = getSafeEngine(0);
         if (engine1 == null) return;
 
-        playerOneNameLabel.setText(currentConfig.getPlayer1Name());
-        playerOneTypeLabel.setText(currentConfig.getPlayer1Type().toString());
-        initialLevelLabel.setText(String.valueOf(engine1.getInitialLevel()));
         currentLevelLabel.setText(String.valueOf(engine1.getCurrentLevel()));
         linesErasedLabel.setText(String.valueOf(engine1.getLinesErased()));
         scoreValueLabel.setText(String.valueOf(engine1.getScore()));
@@ -522,9 +552,6 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         if (playerTwoInfoPanel != null) {
             GameEngine engine2 = getSafeEngine(1);
             if (engine2 != null) {
-                playerTwoNameLabel.setText(currentConfig.getPlayer2Name());
-                playerTwoTypeLabel.setText(currentConfig.getPlayer2Type().toString());
-                initialLevelLabel2.setText(String.valueOf(engine2.getInitialLevel()));
                 currentLevelLabel2.setText(String.valueOf(engine2.getCurrentLevel()));
                 linesErasedLabel2.setText(String.valueOf(engine2.getLinesErased()));
                 scoreValueLabel2.setText(String.valueOf(engine2.getScore()));
@@ -559,7 +586,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             public void handle(long now) {
                 if (!paused) {
                     updateGames(now);
-                    updateGameInfo(); // <-- Call to update info panel
+                    updateGameInfo();
                 }
                 drawGames();
                 checkGameOver();
@@ -755,11 +782,11 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         if (paused) return;
 
         if (isExtendedMode) {
-            // player 1 fast drop release (S key)
-            if (event.getCode() == KeyCode.S && currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
+            // player 1 fast drop release (F key)
+            if (event.getCode() == KeyCode.F && currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
                 GameEngine engine = getSafeEngine(0);
                 if (engine != null) {
-                    engine.setFastDrop(false);
+                    engine.setFastDropEnabled(false);
                 }
             }
 
@@ -767,7 +794,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             if (event.getCode() == KeyCode.DOWN && currentConfig.getPlayer2Type() == GameConfig.PlayerType.HUMAN) {
                 GameEngine engine = getSafeEngine(1);
                 if (engine != null) {
-                    engine.setFastDrop(false);
+                    engine.setFastDropEnabled(false);
                 }
             }
         } else {
@@ -775,7 +802,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             if (event.getCode() == KeyCode.DOWN && currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
                 GameEngine engine = getSafeEngine(0);
                 if (engine != null) {
-                    engine.setFastDrop(false);
+                    engine.setFastDropEnabled(false);
                 }
             }
         }
@@ -790,23 +817,23 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         }
 
         switch (event.getCode()) {
-            case LEFT -> engine.moveLeft();
-            case RIGHT -> engine.moveRight();
-            case DOWN -> engine.setFastDrop(true);
-            case UP -> engine.rotate();
+            case LEFT -> engine.executeCommand(GameCommand.moveLeft());
+            case RIGHT -> engine.executeCommand(GameCommand.moveRight());
+            case DOWN -> engine.executeCommand(GameCommand.setFastDrop(true));
+            case UP -> engine.executeCommand(GameCommand.rotate());
         }
     }
 
     private void handleTwoPlayerInput(KeyEvent event) {
-        // player 1 controls (WASD) - ONLY for HUMAN players
+        // player 1 controls (RDFG) - ONLY for HUMAN players
         if (currentConfig.getPlayer1Type() == GameConfig.PlayerType.HUMAN) {
             GameEngine p1Engine = getSafeEngine(0);
             if (p1Engine != null && p1Engine.isGameRunning()) {
                 switch (event.getCode()) {
-                    case A -> p1Engine.moveLeft();
-                    case D -> p1Engine.moveRight();
-                    case W -> p1Engine.rotate();
-                    case S -> p1Engine.setFastDrop(true);
+                    case D -> p1Engine.executeCommand(GameCommand.moveLeft());
+                    case G -> p1Engine.executeCommand(GameCommand.moveRight());
+                    case R -> p1Engine.executeCommand(GameCommand.rotate());
+                    case F -> p1Engine.executeCommand(GameCommand.setFastDrop(true));
                 }
             }
         }
@@ -816,10 +843,10 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             GameEngine p2Engine = getSafeEngine(1);
             if (p2Engine != null && p2Engine.isGameRunning()) {
                 switch (event.getCode()) {
-                    case LEFT -> p2Engine.moveLeft();
-                    case RIGHT -> p2Engine.moveRight();
-                    case UP -> p2Engine.rotate();
-                    case DOWN -> p2Engine.setFastDrop(true);
+                    case LEFT -> p2Engine.executeCommand(GameCommand.moveLeft());
+                    case RIGHT -> p2Engine.executeCommand(GameCommand.moveRight());
+                    case UP -> p2Engine.executeCommand(GameCommand.rotate());
+                    case DOWN -> p2Engine.executeCommand(GameCommand.setFastDrop(true));
                 }
             }
         }
@@ -871,8 +898,8 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         GameConfig config = GameConfig.getInstance();
 
         // dynamic window sizing based on mode
-        int width = config.isExtendedMode() ? 700 : 400;
-        int height = config.isExtendedMode() ? 650 : 600;
+        int width = config.isExtendedMode() ? 750 : 500;
+        int height = 660;
 
         LoadResult<GameplayScreen> result = loadSceneWithController(
                 GameplayScreen.class, "gameplay.fxml", width, height);
