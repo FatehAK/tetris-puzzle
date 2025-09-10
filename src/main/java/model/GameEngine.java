@@ -5,6 +5,12 @@ import java.net.*;
 import java.util.Random;
 import com.google.gson.Gson;
 
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+
 // Controls the game logic and piece movement
 public class GameEngine implements InputController {
     private GameBoard board;
@@ -185,6 +191,16 @@ public class GameEngine implements InputController {
     
     @Override
     public boolean rotate() {
+        // Play Roatate Sound Effect
+        try {
+            String path = getClass().getResource("/audio/move-turn.wav").toExternalForm();
+            Media rotateSound = new Media(path);
+            MediaPlayer RotateSoundPlayer = new MediaPlayer(rotateSound);
+            RotateSoundPlayer.play();
+        } catch (Exception e) {
+            System.out.println("Background music could not be loaded: " + e.getMessage());
+        }
+
         return rotatePiece();
     }
     

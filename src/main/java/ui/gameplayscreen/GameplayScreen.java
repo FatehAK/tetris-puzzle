@@ -72,8 +72,8 @@ public class GameplayScreen extends BaseScreen {
         
         // Start background music
         try {
-            String musicPath = getClass().getResource("/audio/background.mp3").toExternalForm();
-            Media backgroundMusic = new Media(musicPath);
+            String path = getClass().getResource("/audio/background.mp3").toExternalForm();
+            Media backgroundMusic = new Media(path);
             backgroundPlayer = new MediaPlayer(backgroundMusic);
             backgroundPlayer.setCycleCount(MediaPlayer.INDEFINITE); // loop music
             backgroundPlayer.play();
@@ -177,7 +177,25 @@ public class GameplayScreen extends BaseScreen {
             navigateToMenu(); // fallback if canvas unavailable
             return;
         }
-        
+
+        // Play Game Over Sound Effect
+        try {
+            if (backgroundPlayer != null) {
+                backgroundPlayer.pause();
+            }
+            String path = getClass().getResource("/audio/game-finish.wav").toExternalForm();
+            Media gameOverSound = new Media(path);
+            MediaPlayer gameOverSoundPlayer = new MediaPlayer(gameOverSound);
+            gameOverSoundPlayer.setOnEndOfMedia(() -> {
+                gameOverSoundPlayer.dispose();
+                // Resume background music if user choose to play again:
+                if (backgroundPlayer != null) backgroundPlayer.play();
+            });
+            gameOverSoundPlayer.play();
+        } catch (Exception e) {
+            System.out.println("Game over sound could not be played: " + e.getMessage());
+        }
+
         GameOverDialog.GameOverAction action = GameOverDialog.show(firstCanvas.getScene().getWindow());
         
         if (action == GameOverDialog.GameOverAction.PLAY_AGAIN) {
