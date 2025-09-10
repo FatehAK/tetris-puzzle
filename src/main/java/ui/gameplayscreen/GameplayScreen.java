@@ -25,21 +25,21 @@ import ui.BaseScreen;
 import ui.GameOverDialog;
 import util.ShapeColors;
 import util.ServerMonitor;
+import util.AudioManager;
+import util.AudioObserver;
 import ui.configscreen.GameConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 // JavaFX controller for the main game screen with falling pieces
-public class GameplayScreen extends BaseScreen {
+public class GameplayScreen extends BaseScreen implements AudioObserver {
     private boolean paused = false;
 
     // FXML components
     @FXML private Canvas gameCanvas;
     @FXML private VBox gameContainer;
     @FXML private Button backButton;
+    @FXML private Label audioStatusLabel;
 
     private final List<GameEngine> engines = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
@@ -61,25 +61,21 @@ public class GameplayScreen extends BaseScreen {
     private static final Color BORDER_COLOR = Color.web("#333333");
     private static final Color PAUSE_TEXT_COLOR = Color.web("#FFFFFF");
     
-    private MediaPlayer backgroundPlayer;
-
     private Runnable onBackToMenu;
+    private AudioManager audioManager;
     private final ServerMonitor serverMonitor = new ServerMonitor();
 
     public void initialize() {
         currentConfig = GameConfig.getInstance();
         isExtendedMode = currentConfig.isExtendedMode();
         
-        // Start background music
-        try {
-            String path = getClass().getResource("/audio/background.mp3").toExternalForm();
-            Media backgroundMusic = new Media(path);
-            backgroundPlayer = new MediaPlayer(backgroundMusic);
-            backgroundPlayer.setCycleCount(MediaPlayer.INDEFINITE); // loop music
-            backgroundPlayer.play();
-        } catch (Exception e) {
-            System.out.println("Background music could not be loaded: " + e.getMessage());
-        }
+        // initialize audio system
+        audioManager = AudioManager.getInstance();
+        audioManager.addObserver(this);
+        audioManager.enterGameplayMode();
+        
+        // initialize audio status display
+        updateAudioStatusDisplay();
 
         if (isExtendedMode) {
             setupTwoPlayerMode();
@@ -103,6 +99,7 @@ public class GameplayScreen extends BaseScreen {
         // pause game if not already paused
         if (!paused) {
             paused = true;
+            audioManager.pauseBackgroundMusic();
         }
         
         // show confirmation dialog
@@ -113,6 +110,7 @@ public class GameplayScreen extends BaseScreen {
             // user cancelled - resume game only if it wasn't already paused
             if (!wasAlreadyPaused) {
                 paused = false;
+                audioManager.resumeBackgroundMusic();
             }
             // restore keyboard focus to the game scene
             restoreKeyboardFocus();
@@ -141,10 +139,9 @@ public class GameplayScreen extends BaseScreen {
         }
         serverMonitor.hideDialog();
 
-        // Stop background music
-        if (backgroundPlayer != null) {
-            backgroundPlayer.stop();
-        }
+        // stop audio and cleanup
+        audioManager.exitGameplayMode();  // stops music and exits gameplay mode
+        audioManager.removeObserver(this);
 
         if (onBackToMenu != null) {
             onBackToMenu.run();
@@ -178,23 +175,9 @@ public class GameplayScreen extends BaseScreen {
             return;
         }
 
-        // Play Game Over Sound Effect
-        try {
-            if (backgroundPlayer != null) {
-                backgroundPlayer.pause();
-            }
-            String path = getClass().getResource("/audio/game-finish.wav").toExternalForm();
-            Media gameOverSound = new Media(path);
-            MediaPlayer gameOverSoundPlayer = new MediaPlayer(gameOverSound);
-            gameOverSoundPlayer.setOnEndOfMedia(() -> {
-                gameOverSoundPlayer.dispose();
-                // Resume background music if user choose to play again:
-                if (backgroundPlayer != null) backgroundPlayer.play();
-            });
-            gameOverSoundPlayer.play();
-        } catch (Exception e) {
-            System.out.println("Game over sound could not be played: " + e.getMessage());
-        }
+        // pause background music and play game over sound
+        audioManager.pauseBackgroundMusic();
+        audioManager.playSoundEffect(AudioManager.SOUND_GAME_OVER);
 
         GameOverDialog.GameOverAction action = GameOverDialog.show(firstCanvas.getScene().getWindow());
         
@@ -216,6 +199,9 @@ public class GameplayScreen extends BaseScreen {
         paused = false;
         serverMonitorStarted = false;
         finalResultsHandled = false;
+        
+        // resume background music (already in gameplay mode, just resume if paused)
+        audioManager.resumeBackgroundMusic();
         
         // create new game seed for synchronized sequences
         gameSeed = System.currentTimeMillis();
@@ -285,7 +271,7 @@ public class GameplayScreen extends BaseScreen {
             Label playerLabel = new Label("Player " + (i + 1));
             playerLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
             Label typeLabel = new Label("(" + playerType + ")");
-            typeLabel.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 14px;");
+            typeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
             labelContainer.getChildren().addAll(playerLabel, typeLabel);
             
             // game canvas
@@ -499,7 +485,24 @@ public class GameplayScreen extends BaseScreen {
         if (event.getCode() == KeyCode.P) {
             if (!paused || !serverMonitor.isDialogShowing()) {
                 paused = !paused;
+                // pause/resume music with game state
+                if (paused) {
+                    audioManager.pauseBackgroundMusic();
+                } else {
+                    audioManager.resumeBackgroundMusic();
+                }
             }
+            return;
+        }
+        
+        // Audio toggles
+        if (event.getCode() == KeyCode.M) {
+            currentConfig.setMusicEnabled(!currentConfig.isMusicEnabled());
+            return;
+        }
+        
+        if (event.getCode() == KeyCode.S) {
+            currentConfig.setSoundEnabled(!currentConfig.isSoundEnabled());
             return;
         }
         
@@ -592,6 +595,7 @@ public class GameplayScreen extends BaseScreen {
             () -> {
                 if (paused && serverMonitor.isDialogShowing()) {
                     paused = false;
+                    audioManager.resumeBackgroundMusic();
                     serverMonitor.hideDialog();
                 }
             },
@@ -599,6 +603,7 @@ public class GameplayScreen extends BaseScreen {
                 // check if any game is running before showing server dialog
                 if (engines.stream().anyMatch(GameEngine::isGameRunning)) {
                     paused = true; // ensure game is paused
+                    audioManager.pauseBackgroundMusic();
                     serverMonitor.showDialog(() -> {
                         navigateToMenu();
                     });
@@ -606,13 +611,32 @@ public class GameplayScreen extends BaseScreen {
             }
         );
     }
+    
+    // AudioObserver implementation
+    @Override
+    public void onMusicSettingChanged(boolean enabled) {
+        updateAudioStatusDisplay();
+    }
+    
+    @Override
+    public void onSoundSettingChanged(boolean enabled) {
+        updateAudioStatusDisplay();
+    }
+
+    private void updateAudioStatusDisplay() {
+        if (audioStatusLabel != null) {
+            String musicStatus = audioManager.isMusicEnabled() ? "ON" : "OFF";
+            String soundStatus = audioManager.isSoundEnabled() ? "ON" : "OFF";
+            audioStatusLabel.setText(String.format("Music: %s  Sound: %s", musicStatus, soundStatus));
+        }
+    }
 
     public static Scene getScene(Runnable onBackToMenu) {
         GameConfig config = GameConfig.getInstance();
         
         // dynamic window sizing based on mode
         int width = config.isExtendedMode() ? 700 : 400;
-        int height = config.isExtendedMode() ? 650 : 600;
+        int height = config.isExtendedMode() ? 660 : 630;
         
         LoadResult<GameplayScreen> result = loadSceneWithController(
             GameplayScreen.class, "gameplay.fxml", width, height);

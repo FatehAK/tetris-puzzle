@@ -13,12 +13,15 @@
       spacing="20"
       stylesheets="@gameplay.css">
     
+    <!-- Audio status display at the top -->
+    <Label fx:id="audioStatusLabel" text="Music: ON  Sound: ON"
+           styleClass="audio-status-label" />
+    
     <!-- Dynamic container for single/two-player layouts -->
     <VBox fx:id="gameContainer" alignment="CENTER" spacing="20">
         <!-- Default single-player canvas (replaced in two-player mode) -->
         <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
     </VBox>
-    
 
     <Button fx:id="backButton" text="Back to Menu" styleClass="game-button-small"/>
     

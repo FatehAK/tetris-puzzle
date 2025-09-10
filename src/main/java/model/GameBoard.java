@@ -1,6 +1,5 @@
 package model;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
+import util.AudioManager;
 // Manages the 10x20 Tetris game board and collision detection
 public class GameBoard {
     public static final int BOARD_WIDTH = 10;
@@ -98,17 +97,8 @@ public class GameBoard {
             }
 
             if (fullRow) {
-                // Play erase-line sound effect
-                try {
-                    String soundPath = getClass().getResource("/audio/erase-line.wav").toExternalForm();
-                    Media eraseLineMedia = new Media(soundPath);
-                    MediaPlayer eraseLinePlayer = new MediaPlayer(eraseLineMedia);
-                    eraseLinePlayer.play();
-                    // Optional: release resources after playback
-                    eraseLinePlayer.setOnEndOfMedia(() -> eraseLinePlayer.dispose());
-                } catch (Exception e) {
-                    System.out.println("Erase line sound could not be played: " + e.getMessage());
-                }
+                // play line clear sound effect
+                AudioManager.getInstance().playSoundEffect(AudioManager.SOUND_LINE_CLEAR);
 
                 // shift all rows above down by one
                 for (int y = row; y > 0; y--) {

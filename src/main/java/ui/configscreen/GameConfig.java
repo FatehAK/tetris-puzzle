@@ -1,5 +1,7 @@
 package ui.configscreen;
 
+import util.AudioManager;
+
 // Holds game configuration settings that can be shared between screens
 public class GameConfig {
     public enum PlayerType {
@@ -51,6 +53,8 @@ public class GameConfig {
     
     public void setMusicEnabled(boolean musicEnabled) {
         this.musicEnabled = musicEnabled;
+        // sync with AudioManager
+        AudioManager.getInstance().setMusicEnabled(musicEnabled);
     }
     
     // sound setting
@@ -60,6 +64,8 @@ public class GameConfig {
     
     public void setSoundEnabled(boolean soundEnabled) {
         this.soundEnabled = soundEnabled;
+        // sync with AudioManager
+        AudioManager.getInstance().setSoundEnabled(soundEnabled);
     }
     
     // extended mode setting
