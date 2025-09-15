@@ -15,8 +15,9 @@ public class GameEngine {
     private Random random;
     private boolean gameRunning;
     private long lastDropTime = 0;
-    private static final long DROP_INTERVAL = 800_000_000L; // 0.8 seconds in nanoseconds
+    private static final long BASE_DROP_INTERVAL = 800_000_000L; // 0.8 seconds in nanoseconds at level 1
     private static final long FAST_DROP_INTERVAL = 50_000_000L; // 0.05 seconds in nanoseconds for fast drop
+    private static final long MIN_DROP_INTERVAL = 100_000_000L; // 0.1 seconds minimum drop time
     private boolean fastDropEnabled = false;
     private double smoothY = 0.0; // smooth Y position for animation
     
@@ -64,12 +65,29 @@ public class GameEngine {
         currentLevel = initialLevel + (linesErased / 10);
     }
 
+    // calculate drop interval based on current level (higher level = faster drops)
+    public long getDropInterval() {
+        if (fastDropEnabled || aiEnabled || externalPlayerMode) {
+            return FAST_DROP_INTERVAL;
+        }
+
+        // level 1 starts at BASE_DROP_INTERVAL (0.8s)
+        // each level reduces drop time by 50ms down to MIN_DROP_INTERVAL (0.1s)
+        long intervalReduction = (currentLevel - 1) * 50_000_000L; // 50ms per level
+        long calculatedInterval = BASE_DROP_INTERVAL - intervalReduction;
+
+        // don't go below minimum drop interval
+        return Math.max(calculatedInterval, MIN_DROP_INTERVAL);
+    }
+
     public GameEngine() {
-        this(new Random());
+        this(new Random(),
+             ui.configscreen.GameConfig.getInstance().getFieldWidth(),
+             ui.configscreen.GameConfig.getInstance().getFieldHeight());
     }
     
-    public GameEngine(Random sharedRandom) {
-        board = new GameBoard();
+    public GameEngine(Random sharedRandom, int boardWidth, int boardHeight) {
+        board = new GameBoard(boardWidth, boardHeight);
         random = sharedRandom;
         gameRunning = false;
         tetrisAI = new TetrisAI();
@@ -77,10 +95,10 @@ public class GameEngine {
         aiEnabled = false;
         externalPlayerMode = false;
     }
-    
+
     // constructor for multi-player scenarios
-    public GameEngine(Random sharedRandom, boolean isAIPlayer, boolean isExternalPlayer) {
-        board = new GameBoard();
+    public GameEngine(Random sharedRandom, int boardWidth, int boardHeight, boolean isAIPlayer, boolean isExternalPlayer) {
+        board = new GameBoard(boardWidth, boardHeight);
         random = sharedRandom;
         gameRunning = false;
         tetrisAI = new TetrisAI();
@@ -96,8 +114,9 @@ public class GameEngine {
         nextShapeType = null; // reset next shape to trigger random first piece
         currentScore = 0;
 
-        // Initialize levels and lines for new game
-        setInitialLevel(1);
+        // initialize levels and lines for new game
+        ui.configscreen.GameConfig config = ui.configscreen.GameConfig.getInstance();
+        setInitialLevel(config.getGameLevel());
         linesErased = 0;
 
         spawnNewShape();
@@ -148,7 +167,7 @@ public class GameEngine {
         nextShapeType = types[random.nextInt(types.length)];
         
         // create shape centered horizontally, start above the game area for proper spawning
-        int startX = (GameBoard.BOARD_WIDTH - TetrisShape.getWidthForType(shapeType)) / 2; // center horizontally
+        int startX = (board.getBoardWidth() - TetrisShape.getWidthForType(shapeType)) / 2; // center horizontally
         int startY = -1; // start above the visible game area to allow proper entry
         currentShape = new TetrisShape(shapeType, startX, startY);
         smoothY = startY; // initialize smooth position
@@ -286,7 +305,7 @@ public class GameEngine {
                     int boardX = newX + col;
                     int boardY = newY + row;
                     
-                    if (boardX < 0 || boardX >= GameBoard.BOARD_WIDTH || boardY >= GameBoard.BOARD_HEIGHT) {
+                    if (boardX < 0 || boardX >= board.getBoardWidth() || boardY >= board.getBoardHeight()) {
                         return false;
                     }
                     
@@ -319,8 +338,8 @@ public class GameEngine {
             executeNextExternalAction();
         }
         
-        // choose drop interval based on fast drop setting, AI mode, or external player mode
-        long dropInterval = (fastDropEnabled || aiEnabled || externalPlayerMode) ? FAST_DROP_INTERVAL : DROP_INTERVAL;
+        // get level-based drop interval
+        long dropInterval = getDropInterval();
         
         // smooth falling animation
         double deltaTime = (currentTime - lastDropTime) / (double) dropInterval;
@@ -447,9 +466,9 @@ public class GameEngine {
     // creates PureGame object from current game state
     private PureGame createPureGameFromCurrentState() {
         // get current board state as String[][]
-        String[][] cells = new String[GameBoard.BOARD_HEIGHT][GameBoard.BOARD_WIDTH];
-        for (int row = 0; row < GameBoard.BOARD_HEIGHT; row++) {
-            for (int col = 0; col < GameBoard.BOARD_WIDTH; col++) {
+        String[][] cells = new String[board.getBoardHeight()][board.getBoardWidth()];
+        for (int row = 0; row < board.getBoardHeight(); row++) {
+            for (int col = 0; col < board.getBoardWidth(); col++) {
                 cells[row][col] = board.getCellColor(row, col);
             }
         }
@@ -481,7 +500,7 @@ public class GameEngine {
         int shapeY = currentShape != null ? currentShape.getY() : 0;
         String shapeType = currentShape != null ? currentShape.getType().name() : "T";
         
-        return new PureGame(GameBoard.BOARD_WIDTH, GameBoard.BOARD_HEIGHT, 
+        return new PureGame(board.getBoardWidth(), board.getBoardHeight(),
                            cells, currentShapePattern, nextShapePattern, shapeX, shapeY, shapeType);
     }
 }

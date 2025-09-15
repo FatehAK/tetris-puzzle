@@ -94,6 +94,12 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         currentConfig = GameConfig.getInstance();
         isExtendedMode = currentConfig.isExtendedMode();
 
+        // set Canvas dimensions based on config
+        double canvasWidth = currentConfig.getFieldWidth() * CELL_SIZE;
+        double canvasHeight = currentConfig.getFieldHeight() * CELL_SIZE;
+        gameCanvas.setWidth(canvasWidth);
+        gameCanvas.setHeight(canvasHeight);
+
         // initialize audio system
         audioManager = AudioManager.getInstance();
         audioManager.addObserver(this);
@@ -337,7 +343,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             boolean isExternal = (i == 0) ?
                     (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
                     (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
-            GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
+            GameEngine engine = new GameEngine(new Random(gameSeed), currentConfig.getFieldWidth(), currentConfig.getFieldHeight(), isAI, isExternal);
             configureEngine();
             engines.set(i, engine);
             engine.startGame();
@@ -361,7 +367,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         // create single engine with proper configuration
         boolean isAI = (currentConfig.getPlayer1Type() == GameConfig.PlayerType.AI);
         boolean isExternal = (currentConfig.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL);
-        GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
+        GameEngine engine = new GameEngine(new Random(gameSeed), currentConfig.getFieldWidth(), currentConfig.getFieldHeight(), isAI, isExternal);
         configureEngine();
         engines.add(engine);
 
@@ -443,7 +449,9 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             labelContainer.getChildren().addAll(playerLabel, typeLabel);
 
             // game canvas
-            Canvas canvas = new Canvas(250, 500);
+            double canvasWidth = currentConfig.getFieldWidth() * CELL_SIZE;
+            double canvasHeight = currentConfig.getFieldHeight() * CELL_SIZE;
+            Canvas canvas = new Canvas(canvasWidth, canvasHeight);
             canvas.getStyleClass().add("game-field");
 
             playerBox.getChildren().addAll(labelContainer, canvas);
@@ -460,7 +468,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             boolean isExternal = (i == 0) ?
                     (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
                     (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
-            GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
+            GameEngine engine = new GameEngine(new Random(gameSeed), currentConfig.getFieldWidth(), currentConfig.getFieldHeight(), isAI, isExternal);
             configureEngine(); // now just handles server monitoring
             engines.add(engine);
 
@@ -639,8 +647,9 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         // draw game board cells
-        for (int row = 0; row < GameBoard.BOARD_HEIGHT; row++) {
-            for (int col = 0; col < GameBoard.BOARD_WIDTH; col++) {
+        GameBoard board = engine.getBoard();
+        for (int row = 0; row < board.getBoardHeight(); row++) {
+            for (int col = 0; col < board.getBoardWidth(); col++) {
                 double x = PADDING + col * CELL_SIZE;
                 double y = PADDING + row * CELL_SIZE;
 
@@ -673,8 +682,8 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                         double boardRow = smoothY + row;
 
                         // only draw if within visible area
-                        if (boardCol >= 0 && boardCol < GameBoard.BOARD_WIDTH &&
-                                boardRow >= 0 && boardRow < GameBoard.BOARD_HEIGHT) {
+                        if (boardCol >= 0 && boardCol < board.getBoardWidth() &&
+                                boardRow >= 0 && boardRow < board.getBoardHeight()) {
                             double x = PADDING + boardCol * CELL_SIZE;
                             double y = PADDING + boardRow * CELL_SIZE;
                             drawCell(gc, x, y, CELL_SIZE, currentShape.getColor());

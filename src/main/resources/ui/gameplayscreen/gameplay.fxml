@@ -64,7 +64,7 @@
                styleClass="audio-status-label" />
 
         <!-- Default single-player canvas (replaced in two-player mode) -->
-        <Canvas fx:id="gameCanvas" width="250" height="500" styleClass="game-field"/>
+        <Canvas fx:id="gameCanvas" styleClass="game-field"/>
 
         <Button fx:id="backButton" text="Back to Menu" styleClass="game-button-small"/>
     </VBox>

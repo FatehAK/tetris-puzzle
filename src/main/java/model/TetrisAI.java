@@ -19,7 +19,7 @@ public class TetrisAI {
             // create test piece for this rotation
             TetrisShape testPiece = createTestPiece(piece, rotation);
             
-            for (int col = 0; col < GameBoard.BOARD_WIDTH; col++) {
+            for (int col = 0; col < board.getBoardWidth(); col++) {
                 // check if piece can fit in this column
                 if (canFitInColumn(board, testPiece, col)) {
                     String[][] simulatedBoard = simulateDrop(board, testPiece, col);
@@ -56,7 +56,7 @@ public class TetrisAI {
     
     // check if a piece can potentially fit in a column
     private boolean canFitInColumn(GameBoard board, TetrisShape piece, int col) {
-        return col >= 0 && col + piece.getWidth() <= GameBoard.BOARD_WIDTH;
+        return col >= 0 && col + piece.getWidth() <= board.getBoardWidth();
     }
     
     // simulate dropping a piece in a specific column and return resulting board
@@ -96,8 +96,8 @@ public class TetrisAI {
                     int boardY = row + r;
                     
                     // check bounds
-                    if (boardX < 0 || boardX >= GameBoard.BOARD_WIDTH || 
-                        boardY < 0 || boardY >= GameBoard.BOARD_HEIGHT) {
+                    if (boardX < 0 || boardX >= board.getBoardWidth() ||
+                        boardY < 0 || boardY >= board.getBoardHeight()) {
                         return false;
                     }
                     
@@ -119,8 +119,8 @@ public class TetrisAI {
                     int boardX = col + c;
                     int boardY = row + r;
                     
-                    if (boardX >= 0 && boardX < GameBoard.BOARD_WIDTH && 
-                        boardY >= 0 && boardY < GameBoard.BOARD_HEIGHT) {
+                    if (boardX >= 0 && boardX < board[0].length &&
+                        boardY >= 0 && boardY < board.length) {
                         board[boardY][boardX] = piece.getColor();
                     }
                 }
@@ -130,9 +130,9 @@ public class TetrisAI {
     
     // create a copy of the game board for simulation
     private String[][] copyBoard(GameBoard board) {
-        String[][] newBoard = new String[GameBoard.BOARD_HEIGHT][GameBoard.BOARD_WIDTH];
-        for (int y = 0; y < GameBoard.BOARD_HEIGHT; y++) {
-            for (int x = 0; x < GameBoard.BOARD_WIDTH; x++) {
+        String[][] newBoard = new String[board.getBoardHeight()][board.getBoardWidth()];
+        for (int y = 0; y < board.getBoardHeight(); y++) {
+            for (int x = 0; x < board.getBoardWidth(); x++) {
                 newBoard[y][x] = board.getCellColor(y, x);
             }
         }

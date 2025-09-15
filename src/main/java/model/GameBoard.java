@@ -1,15 +1,24 @@
 package model;
 import util.AudioManager;
-// Manages the 10x20 Tetris game board and collision detection
+// Manages the Tetris game board and collision detection with configurable dimensions
 public class GameBoard {
-    public static final int BOARD_WIDTH = 10;
-    public static final int BOARD_HEIGHT = 20;
-
+    private final int boardWidth;
+    private final int boardHeight;
     private String[][] board;
 
-    public GameBoard() {
-        board = new String[BOARD_HEIGHT][BOARD_WIDTH];
+    public GameBoard(int width, int height) {
+        this.boardWidth = width;
+        this.boardHeight = height;
+        board = new String[boardHeight][boardWidth];
         clearBoard();
+    }
+
+    public int getBoardWidth() {
+        return boardWidth;
+    }
+
+    public int getBoardHeight() {
+        return boardHeight;
     }
 
     public void clearBoard() {
@@ -24,8 +33,8 @@ public class GameBoard {
     public void setBoardState(String[][] cells) {
         clearBoard();
         if (cells != null) {
-            for (int row = 0; row < cells.length && row < BOARD_HEIGHT; row++) {
-                for (int col = 0; col < cells[row].length && col < BOARD_WIDTH; col++) {
+            for (int row = 0; row < cells.length && row < boardHeight; row++) {
+                for (int col = 0; col < cells[row].length && col < boardWidth; col++) {
                     board[row][col] = cells[row][col];
                 }
             }
@@ -40,7 +49,7 @@ public class GameBoard {
                     int boardY = newY + row;
 
                     // lllow pieces above the game area (negative Y), but check bounds for visible area
-                    if (boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT) {
+                    if (boardX < 0 || boardX >= boardWidth || boardY >= boardHeight) {
                         return false;
                     }
 
@@ -61,8 +70,8 @@ public class GameBoard {
                     int boardX = shape.getX() + col;
                     int boardY = shape.getY() + row;
 
-                    if (boardX >= 0 && boardX < BOARD_WIDTH &&
-                            boardY >= 0 && boardY < BOARD_HEIGHT) {
+                    if (boardX >= 0 && boardX < boardWidth &&
+                            boardY >= 0 && boardY < boardHeight) {
                         board[boardY][boardX] = shape.getColor();
                     }
                 }
@@ -71,7 +80,7 @@ public class GameBoard {
     }
 
     public String getCellColor(int row, int col) {
-        if (row >= 0 && row < BOARD_HEIGHT && col >= 0 && col < BOARD_WIDTH) {
+        if (row >= 0 && row < boardHeight && col >= 0 && col < boardWidth) {
             return board[row][col];
         }
         return null;
@@ -87,10 +96,10 @@ public class GameBoard {
     public int clearFullRows() {
         int rowsCleared = 0;
 
-        for (int row = 0; row < BOARD_HEIGHT; ) {
+        for (int row = 0; row < boardHeight; ) {
             boolean fullRow = true;
 
-            for (int col = 0; col < BOARD_WIDTH; col++) {
+            for (int col = 0; col < boardWidth; col++) {
                 if (board[row][col] == null) {
                     fullRow = false;
                     break;
@@ -104,11 +113,11 @@ public class GameBoard {
 
                 // shift all rows above down by one
                 for (int y = row; y > 0; y--) {
-                    System.arraycopy(board[y - 1], 0, board[y], 0, BOARD_WIDTH);
+                    System.arraycopy(board[y - 1], 0, board[y], 0, boardWidth);
                 }
 
                 // clear top row
-                for (int col = 0; col < BOARD_WIDTH; col++) {
+                for (int col = 0; col < boardWidth; col++) {
                     board[0][col] = null;
                 }
 
