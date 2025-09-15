@@ -894,15 +894,49 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         }
     }
 
+
     public static Scene getScene(Runnable onBackToMenu) {
         GameConfig config = GameConfig.getInstance();
 
-        // dynamic window sizing based on mode
-        int width = config.isExtendedMode() ? 750 : 500;
-        int height = 660;
+        // Constants from GameplayScreen
+        final int CELL_SIZE = 25;
+        final int UI_WIDTH_MARGIN = 250;   // Space for info panels and controls
+        final int UI_HEIGHT_MARGIN = 260;  // Space for top and bottom UI elements
+        final int PLAYER_SPACING = 50;     // Space between two player fields
+
+        // Get current field dimensions from config
+        int fieldWidth = config.getFieldWidth();
+        int fieldHeight = config.getFieldHeight();
+
+        // Calculate game field dimensions in pixels
+        int gameFieldWidth = fieldWidth * CELL_SIZE;
+        int gameFieldHeight = fieldHeight * CELL_SIZE;
+
+        // Calculate total window dimensions
+        int windowWidth;
+        int windowHeight = gameFieldHeight + UI_HEIGHT_MARGIN;
+
+        if (config.isExtendedMode()) {
+            // Two-player mode: two fields side-by-side with spacing
+            windowWidth = (gameFieldWidth * 2) + PLAYER_SPACING + UI_WIDTH_MARGIN;
+        } else {
+            // Single player mode: one field plus UI space
+            windowWidth = gameFieldWidth + UI_WIDTH_MARGIN;
+        }
+
+        // Ensure minimum window size for usability
+        windowWidth = Math.max(windowWidth, 400);
+        windowHeight = Math.max(windowHeight, 650);
+
+        // Debug output for assignment demonstration
+        System.out.println("Dynamic window sizing:");
+        System.out.println("  Field dimensions: " + fieldWidth + "x" + fieldHeight + " cells");
+        System.out.println("  Game field size: " + gameFieldWidth + "x" + gameFieldHeight + " pixels");
+        System.out.println("  Extended mode: " + config.isExtendedMode());
+        System.out.println("  Final window size: " + windowWidth + "x" + windowHeight + " pixels");
 
         LoadResult<GameplayScreen> result = loadSceneWithController(
-                GameplayScreen.class, "gameplay.fxml", width, height);
+                GameplayScreen.class, "gameplay.fxml", windowWidth, windowHeight);
 
         result.controller().onBackToMenu = onBackToMenu;
         result.controller().setupKeyboardEvents(result.scene());
