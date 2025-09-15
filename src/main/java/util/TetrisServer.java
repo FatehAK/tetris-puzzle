@@ -73,7 +73,8 @@ public class TetrisServer {
             }
             
             // create game board directly from PureGame cells
-            GameBoard gameBoard = new GameBoard();
+            ui.configscreen.GameConfig config = ui.configscreen.GameConfig.getInstance();
+            GameBoard gameBoard = new GameBoard(config.getFieldWidth(), config.getFieldHeight());
             gameBoard.setBoardState(pureGame.getCells());
             
             // create tetris shape with actual type and position from game

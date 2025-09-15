@@ -94,6 +94,12 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         currentConfig = GameConfig.getInstance();
         isExtendedMode = currentConfig.isExtendedMode();
 
+        // set Canvas dimensions based on config
+        double canvasWidth = currentConfig.getFieldWidth() * CELL_SIZE;
+        double canvasHeight = currentConfig.getFieldHeight() * CELL_SIZE;
+        gameCanvas.setWidth(canvasWidth);
+        gameCanvas.setHeight(canvasHeight);
+
         // initialize audio system
         audioManager = AudioManager.getInstance();
         audioManager.addObserver(this);
@@ -337,7 +343,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             boolean isExternal = (i == 0) ?
                     (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
                     (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
-            GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
+            GameEngine engine = new GameEngine(new Random(gameSeed), currentConfig.getFieldWidth(), currentConfig.getFieldHeight(), isAI, isExternal);
             configureEngine();
             engines.set(i, engine);
             engine.startGame();
@@ -361,7 +367,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         // create single engine with proper configuration
         boolean isAI = (currentConfig.getPlayer1Type() == GameConfig.PlayerType.AI);
         boolean isExternal = (currentConfig.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL);
-        GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
+        GameEngine engine = new GameEngine(new Random(gameSeed), currentConfig.getFieldWidth(), currentConfig.getFieldHeight(), isAI, isExternal);
         configureEngine();
         engines.add(engine);
 
@@ -443,7 +449,9 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             labelContainer.getChildren().addAll(playerLabel, typeLabel);
 
             // game canvas
-            Canvas canvas = new Canvas(250, 500);
+            double canvasWidth = currentConfig.getFieldWidth() * CELL_SIZE;
+            double canvasHeight = currentConfig.getFieldHeight() * CELL_SIZE;
+            Canvas canvas = new Canvas(canvasWidth, canvasHeight);
             canvas.getStyleClass().add("game-field");
 
             playerBox.getChildren().addAll(labelContainer, canvas);
@@ -460,7 +468,7 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
             boolean isExternal = (i == 0) ?
                     (config.getPlayer1Type() == GameConfig.PlayerType.EXTERNAL) :
                     (config.getPlayer2Type() == GameConfig.PlayerType.EXTERNAL);
-            GameEngine engine = new GameEngine(new Random(gameSeed), isAI, isExternal);
+            GameEngine engine = new GameEngine(new Random(gameSeed), currentConfig.getFieldWidth(), currentConfig.getFieldHeight(), isAI, isExternal);
             configureEngine(); // now just handles server monitoring
             engines.add(engine);
 
@@ -639,8 +647,9 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         // draw game board cells
-        for (int row = 0; row < GameBoard.BOARD_HEIGHT; row++) {
-            for (int col = 0; col < GameBoard.BOARD_WIDTH; col++) {
+        GameBoard board = engine.getBoard();
+        for (int row = 0; row < board.getBoardHeight(); row++) {
+            for (int col = 0; col < board.getBoardWidth(); col++) {
                 double x = PADDING + col * CELL_SIZE;
                 double y = PADDING + row * CELL_SIZE;
 
@@ -673,8 +682,8 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
                         double boardRow = smoothY + row;
 
                         // only draw if within visible area
-                        if (boardCol >= 0 && boardCol < GameBoard.BOARD_WIDTH &&
-                                boardRow >= 0 && boardRow < GameBoard.BOARD_HEIGHT) {
+                        if (boardCol >= 0 && boardCol < board.getBoardWidth() &&
+                                boardRow >= 0 && boardRow < board.getBoardHeight()) {
                             double x = PADDING + boardCol * CELL_SIZE;
                             double y = PADDING + boardRow * CELL_SIZE;
                             drawCell(gc, x, y, CELL_SIZE, currentShape.getColor());
@@ -894,15 +903,49 @@ public class GameplayScreen extends BaseScreen implements AudioObserver {
         }
     }
 
+
     public static Scene getScene(Runnable onBackToMenu) {
         GameConfig config = GameConfig.getInstance();
 
-        // dynamic window sizing based on mode
-        int width = config.isExtendedMode() ? 750 : 500;
-        int height = 660;
+        // Constants from GameplayScreen
+        final int CELL_SIZE = 25;
+        final int UI_WIDTH_MARGIN = 250;   // Space for info panels and controls
+        final int UI_HEIGHT_MARGIN = 260;  // Space for top and bottom UI elements
+        final int PLAYER_SPACING = 50;     // Space between two player fields
+
+        // Get current field dimensions from config
+        int fieldWidth = config.getFieldWidth();
+        int fieldHeight = config.getFieldHeight();
+
+        // Calculate game field dimensions in pixels
+        int gameFieldWidth = fieldWidth * CELL_SIZE;
+        int gameFieldHeight = fieldHeight * CELL_SIZE;
+
+        // Calculate total window dimensions
+        int windowWidth;
+        int windowHeight = gameFieldHeight + UI_HEIGHT_MARGIN;
+
+        if (config.isExtendedMode()) {
+            // Two-player mode: two fields side-by-side with spacing
+            windowWidth = (gameFieldWidth * 2) + PLAYER_SPACING + UI_WIDTH_MARGIN;
+        } else {
+            // Single player mode: one field plus UI space
+            windowWidth = gameFieldWidth + UI_WIDTH_MARGIN;
+        }
+
+        // Ensure minimum window size for usability
+        windowWidth = Math.max(windowWidth, 400);
+        windowHeight = Math.max(windowHeight, 650);
+
+        // Debug output for assignment demonstration
+        System.out.println("Dynamic window sizing:");
+        System.out.println("  Field dimensions: " + fieldWidth + "x" + fieldHeight + " cells");
+        System.out.println("  Game field size: " + gameFieldWidth + "x" + gameFieldHeight + " pixels");
+        System.out.println("  Extended mode: " + config.isExtendedMode());
+        System.out.println("  Final window size: " + windowWidth + "x" + windowHeight + " pixels");
 
         LoadResult<GameplayScreen> result = loadSceneWithController(
-                GameplayScreen.class, "gameplay.fxml", width, height);
+                GameplayScreen.class, "gameplay.fxml", windowWidth, windowHeight);
 
         result.controller().onBackToMenu = onBackToMenu;
         result.controller().setupKeyboardEvents(result.scene());
