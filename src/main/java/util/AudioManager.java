@@ -44,19 +44,35 @@ public class AudioManager implements AudioObserver {
     // load all audio resources at startup
     private void loadAudioResources() {
         try {
+            // check if JavaFX toolkit is initialized before loading audio
+            if (!isJavaFXAvailable()) {
+                return;
+            }
+
             // load background music
             String musicPath = getClass().getResource("/audio/background.mp3").toExternalForm();
             Media backgroundMusic = new Media(musicPath);
             backgroundMusicPlayer = new MediaPlayer(backgroundMusic);
             backgroundMusicPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-            
+
             // load sound effects
             loadSoundEffect("line-clear", "/audio/erase-line.wav");
             loadSoundEffect("game-over", "/audio/game-finish.wav");
             loadSoundEffect("move-rotate", "/audio/move-turn.wav");
-            
+
         } catch (Exception e) {
             System.err.println("Error loading audio resources: " + e.getMessage());
+        }
+    }
+
+    // check if JavaFX toolkit is available (to avoid errors in unit tests)
+    private boolean isJavaFXAvailable() {
+        try {
+            Platform.runLater(() -> {}); // test if Platform is available
+            return true;
+        } catch (IllegalStateException e) {
+            // toolkit not initialized
+            return false;
         }
     }
     
