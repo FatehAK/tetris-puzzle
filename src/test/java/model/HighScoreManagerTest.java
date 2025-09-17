@@ -2,15 +2,18 @@ package model;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
-// import model.HighScore;
 import util.HighScoreManager;
 
 public class HighScoreManagerTest {
 
+    @BeforeEach
+    public void resetScores() {
+        HighScoreManager.getInstance().clearScores();
+    }
+
     @Test
     public void testAddAndGetTopScores() {
         HighScoreManager mgr = HighScoreManager.getInstance();
-        mgr.clearScores();
         mgr.addHighScore(new HighScore("Alice", 100));
         mgr.addHighScore(new HighScore("Bob", 200));
         assertEquals(2, mgr.getTopScores().size());
