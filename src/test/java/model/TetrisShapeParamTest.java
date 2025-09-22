@@ -5,7 +5,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TetrisShapeParamTest {
-
     @ParameterizedTest
     @CsvSource({
         "0,1,true",   // T shape top middle

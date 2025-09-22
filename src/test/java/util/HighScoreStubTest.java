@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import model.HighScore;
 
 public class HighScoreStubTest {
-
     @Test
     public void testHighScoreStubDate() {
         // Stub: HighScore with fixed date
@@ -18,3 +17,4 @@ public class HighScoreStubTest {
         assertEquals("2025-01-01", stubScore.getDate().toString());
     }
 }
+
